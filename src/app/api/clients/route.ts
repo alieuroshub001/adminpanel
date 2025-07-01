@@ -1,86 +1,79 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDB } from '@/lib/db';
-import ClientLogo from '@/models/ClientLogo';
-import { uploadImage } from '@/lib/uploadImage';
+import { NextResponse } from 'next/server';
+import { createClientLogo, getClientLogos } from '@/models/clientLogo';
+import { ClientLogoFormData, ImageSource, LogoLine } from '@/types/clientLogo';
 
-// GET all client logos or filter by line
-export async function GET(req: NextRequest) {
-  await connectToDB();
-
-  const { searchParams } = new URL(req.url);
-  const line = searchParams.get('line');
-
+export async function GET() {
   try {
-    if (line) {
-      const filtered = await ClientLogo.find({ line: parseInt(line) });
-      return NextResponse.json(filtered, { status: 200 });
-    }
-
-    const allClients = await ClientLogo.find().sort({ createdAt: -1 });
-    return NextResponse.json(allClients, { status: 200 });
+    const clientLogos = await getClientLogos();
+    
+    // Convert ObjectId to string for client-side
+    const serializedClientLogos = clientLogos.map(item => ({
+      ...item,
+      _id: item._id?.toString(),
+    }));
+    
+    return NextResponse.json(serializedClientLogos);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch client logos' }, { status: 500 });
-  }
-}
-
-// POST: create a client logo
-export async function POST(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const body = await req.json();
-    let { image, imageSource, line } = body;
-
-    if (imageSource === 'upload' && image.startsWith('data:')) {
-      image = await uploadImage(image, 'clients');
-    }
-
-    const newClient = await ClientLogo.create({
-      image,
-      imageSource,
-      line,
-    });
-
-    return NextResponse.json(newClient, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create client logo' }, { status: 500 });
-  }
-}
-
-// PUT: update an existing logo
-export async function PUT(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const body = await req.json();
-    const { _id, image, imageSource, ...rest } = body;
-
-    let finalImage = image;
-    if (imageSource === 'upload' && image.startsWith('data:')) {
-      finalImage = await uploadImage(image, 'clients');
-    }
-
-    const updated = await ClientLogo.findByIdAndUpdate(
-      _id,
-      { ...rest, image: finalImage, imageSource },
-      { new: true }
+    console.error('Error fetching client logos:', error);
+    return NextResponse.json(
+      { message: 'Error fetching client logos', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
     );
-
-    return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update logo' }, { status: 500 });
   }
 }
 
-// DELETE logo by ID
-export async function DELETE(req: NextRequest) {
-  await connectToDB();
-
+export async function POST(request: Request) {
   try {
-    const { _id } = await req.json();
-    await ClientLogo.findByIdAndDelete(_id);
-    return NextResponse.json({ message: 'Client logo deleted' }, { status: 200 });
+    const formData = await request.formData();
+    
+    const clientLogoData: ClientLogoFormData = {
+      image: formData.get('image') as string || '',
+      imageFile: formData.get('imageFile') as File || undefined,
+      imageSource: formData.get('imageSource') as ImageSource,
+      line: parseInt(formData.get('line') as string) as LogoLine
+    };
+
+    // Validate required fields
+    if (!clientLogoData.line || (clientLogoData.line < 1 || clientLogoData.line > 4)) {
+      return NextResponse.json(
+        { message: 'Line number must be between 1 and 4' },
+        { status: 400 }
+      );
+    }
+
+    // Validate image option
+    if (!clientLogoData.imageSource) {
+      return NextResponse.json(
+        { message: 'Please select an image option (upload or URL)' },
+        { status: 400 }
+      );
+    }
+
+    if (clientLogoData.imageSource === 'upload' && !clientLogoData.imageFile) {
+      return NextResponse.json(
+        { message: 'Image file is required when choosing upload option' },
+        { status: 400 }
+      );
+    }
+
+    if (clientLogoData.imageSource === 'link' && !clientLogoData.image) {
+      return NextResponse.json(
+        { message: 'Image URL is required when choosing URL option' },
+        { status: 400 }
+      );
+    }
+
+    const clientLogoId = await createClientLogo(clientLogoData);
+    
+    return NextResponse.json(
+      { _id: clientLogoId.toString() }, 
+      { status: 201 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete logo' }, { status: 500 });
+    console.error('Error creating client logo:', error);
+    return NextResponse.json(
+      { message: 'Error creating client logo', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

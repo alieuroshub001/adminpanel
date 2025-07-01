@@ -1,110 +1,93 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDB } from '@/lib/db';
-import Expertise from '@/models/Expertise';
-import { uploadImage } from '@/lib/uploadImage';
+import { NextResponse } from 'next/server';
+import { createExpertise, getExpertises } from '@/models/expertise';
+import { ExpertiseFormData, ExpertiseCategory } from '@/types/expertise';
 
-// GET all expertises or filter by category/slug
-export async function GET(req: NextRequest) {
-  await connectToDB();
-
-  const { searchParams } = new URL(req.url);
-  const slug = searchParams.get('slug');
-  const category = searchParams.get('category');
-
+export async function GET(request: Request) {
   try {
-    if (slug) {
-      const data = await Expertise.findOne({ slug });
-      if (!data) return NextResponse.json({ error: 'Expertise not found' }, { status: 404 });
-      return NextResponse.json(data, { status: 200 });
-    }
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') as ExpertiseCategory | undefined;
+    const featuredOnly = searchParams.get('featuredOnly') === 'true';
 
-    if (category) {
-      const filtered = await Expertise.find({ category });
-      return NextResponse.json(filtered, { status: 200 });
-    }
-
-    const all = await Expertise.find().sort({ createdAt: -1 });
-    return NextResponse.json(all, { status: 200 });
+    const expertises = await getExpertises(category, featuredOnly);
+    
+    // Convert ObjectId to string for client-side
+    const serializedExpertises = expertises.map(item => ({
+      ...item,
+      _id: item._id?.toString(),
+    }));
+    
+    return NextResponse.json(serializedExpertises);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch expertises' }, { status: 500 });
-  }
-}
-
-// POST: Create a new expertise
-export async function POST(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const body = await req.json();
-    let { cardImage, detailImage, imageSource, ...rest } = body;
-
-    if (imageSource === 'upload') {
-      if (cardImage?.startsWith('data:')) {
-        cardImage = await uploadImage(cardImage, 'expertise/cards');
-      }
-      if (detailImage?.startsWith('data:')) {
-        detailImage = await uploadImage(detailImage, 'expertise/detail');
-      }
-    }
-
-    const newExpertise = await Expertise.create({
-      ...rest,
-      cardImage,
-      detailImage,
-      imageSource,
-    });
-
-    return NextResponse.json(newExpertise, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create expertise' }, { status: 500 });
-  }
-}
-
-// PUT: Update an expertise
-export async function PUT(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const { _id, cardImage, detailImage, imageSource, ...rest } = await req.json();
-
-    let finalCardImage = cardImage;
-    let finalDetailImage = detailImage;
-
-    if (imageSource === 'upload') {
-      if (cardImage?.startsWith('data:')) {
-        finalCardImage = await uploadImage(cardImage, 'expertise/cards');
-      }
-      if (detailImage?.startsWith('data:')) {
-        finalDetailImage = await uploadImage(detailImage, 'expertise/detail');
-      }
-    }
-
-    const updated = await Expertise.findByIdAndUpdate(
-      _id,
-      {
-        ...rest,
-        cardImage: finalCardImage,
-        detailImage: finalDetailImage,
-        imageSource,
-      },
-      { new: true }
+    console.error('Error fetching expertises:', error);
+    return NextResponse.json(
+      { message: 'Error fetching expertises', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
     );
-
-    return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update expertise' }, { status: 500 });
   }
 }
 
-// DELETE: Remove expertise by ID
-export async function DELETE(req: NextRequest) {
-  await connectToDB();
-
+export async function POST(request: Request) {
   try {
-    const { _id } = await req.json();
-    await Expertise.findByIdAndDelete(_id);
-    return NextResponse.json({ message: 'Expertise deleted' }, { status: 200 });
+    const formData = await request.formData();
+    
+    const expertiseData: ExpertiseFormData = {
+      title: formData.get('title') as string,
+      slug: formData.get('slug') as string,
+      category: formData.get('category') as ExpertiseCategory,
+      icon: formData.get('icon') as string,
+      path: formData.get('path') as string,
+      description: formData.get('description') as string || undefined,
+      image: formData.get('image') as string || '',
+      imageFile: formData.get('imageFile') as File || undefined,
+      imageOption: formData.get('imageOption') as 'upload' | 'url',
+      detailImages: JSON.parse(formData.get('detailImages') as string) || [],
+      detailImageFiles: formData.getAll('detailImageFiles') as File[] || [],
+      isFeatured: formData.get('isFeatured') === 'true',
+      insights: JSON.parse(formData.get('insights') as string) || []
+    };
+
+    // Validate required fields
+    if (!expertiseData.title || !expertiseData.slug || !expertiseData.category || 
+        !expertiseData.icon || !expertiseData.path) {
+      return NextResponse.json(
+        { message: 'Title, slug, category, icon, and path are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate image option
+    if (!expertiseData.imageOption) {
+      return NextResponse.json(
+        { message: 'Please select an image option (upload or URL)' },
+        { status: 400 }
+      );
+    }
+
+    if (expertiseData.imageOption === 'upload' && !expertiseData.imageFile) {
+      return NextResponse.json(
+        { message: 'Image file is required when choosing upload option' },
+        { status: 400 }
+      );
+    }
+
+    if (expertiseData.imageOption === 'url' && !expertiseData.image) {
+      return NextResponse.json(
+        { message: 'Image URL is required when choosing URL option' },
+        { status: 400 }
+      );
+    }
+
+    const expertiseId = await createExpertise(expertiseData);
+    
+    return NextResponse.json(
+      { _id: expertiseId.toString() }, 
+      { status: 201 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete expertise' }, { status: 500 });
+    console.error('Error creating expertise:', error);
+    return NextResponse.json(
+      { message: 'Error creating expertise', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

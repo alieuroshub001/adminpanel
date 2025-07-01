@@ -1,80 +1,87 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { connectToDB } from '@/lib/db';
-import Project from '@/models/Project';
-import { uploadImage } from '@/lib/uploadImage';
+import { NextResponse } from 'next/server';
+import { getProjects, createProject } from '@/models/project';
+import { ProjectStatus } from '@/types/project';
 
-// GET all projects or filter by category
-export async function GET(req: NextRequest) {
-  await connectToDB();
-
-  const { searchParams } = new URL(req.url);
-  const category = searchParams.get('category');
-
+export async function GET(request: Request) {
   try {
-    if (category) {
-      const filtered = await Project.find({ category });
-      return NextResponse.json(filtered, { status: 200 });
-    }
+    const { searchParams } = new URL(request.url);
+    const category = searchParams.get('category') || undefined;
+    const status = searchParams.get('status') as ProjectStatus | undefined;
+    const featuredOnly = searchParams.get('featuredOnly') === 'true';
 
-    const projects = await Project.find().sort({ createdAt: -1 });
-    return NextResponse.json(projects, { status: 200 });
+    const projects = await getProjects(category, status, featuredOnly);
+    
+    return NextResponse.json(projects);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
-  }
-}
-
-// POST: Create a new project
-export async function POST(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const body = await req.json();
-    let { image, imageSource, ...rest } = body;
-
-    if (imageSource === 'upload' && image.startsWith('data:')) {
-      image = await uploadImage(image, 'projects');
-    }
-
-    const newProject = await Project.create({ ...rest, image, imageSource });
-    return NextResponse.json(newProject, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
-  }
-}
-
-// PUT: Update an existing project
-export async function PUT(req: NextRequest) {
-  await connectToDB();
-
-  try {
-    const { _id, image, imageSource, ...rest } = await req.json();
-
-    let finalImage = image;
-    if (imageSource === 'upload' && image.startsWith('data:')) {
-      finalImage = await uploadImage(image, 'projects');
-    }
-
-    const updated = await Project.findByIdAndUpdate(
-      _id,
-      { ...rest, image: finalImage, imageSource },
-      { new: true }
+    console.error('Error fetching projects:', error);
+    return NextResponse.json(
+      { message: 'Error fetching projects', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
     );
-
-    return NextResponse.json(updated, { status: 200 });
-  } catch (error) {
-    return NextResponse.json({ error: 'Failed to update project' }, { status: 500 });
   }
 }
 
-// DELETE: Delete project by ID
-export async function DELETE(req: NextRequest) {
-  await connectToDB();
-
+export async function POST(request: Request) {
   try {
-    const { _id } = await req.json();
-    await Project.findByIdAndDelete(_id);
-    return NextResponse.json({ message: 'Project deleted' }, { status: 200 });
+    const formData = await request.formData();
+    
+    const projectData = {
+      title: formData.get('title') as string,
+      image: formData.get('image') as string || '',
+      imageFile: formData.get('imageFile') as File || undefined,
+      imageOption: formData.get('imageOption') as 'upload' | 'url',
+      category: formData.get('category') as string,
+      status: formData.get('status') as ProjectStatus,
+      description: formData.get('description') as string,
+      longDescription: formData.get('longDescription') as string,
+      technologies: JSON.parse(formData.get('technologies') as string) || [],
+      highlights: JSON.parse(formData.get('highlights') as string) || [],
+      date: formData.get('date') as string,
+      featured: formData.get('featured') === 'true',
+    };
+
+    // Validate required fields
+    if (!projectData.title || !projectData.category || !projectData.status || 
+        !projectData.description || !projectData.date) {
+      return NextResponse.json(
+        { message: 'Title, category, status, description, and date are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate image option
+    if (!projectData.imageOption) {
+      return NextResponse.json(
+        { message: 'Please select an image option (upload or URL)' },
+        { status: 400 }
+      );
+    }
+
+    if (projectData.imageOption === 'upload' && !projectData.imageFile) {
+      return NextResponse.json(
+        { message: 'Image file is required when choosing upload option' },
+        { status: 400 }
+      );
+    }
+
+    if (projectData.imageOption === 'url' && !projectData.image) {
+      return NextResponse.json(
+        { message: 'Image URL is required when choosing URL option' },
+        { status: 400 }
+      );
+    }
+
+    const projectId = await createProject(projectData);
+    
+    return NextResponse.json(
+      { _id: projectId.toString() }, 
+      { status: 201 }
+    );
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 });
+    console.error('Error creating project:', error);
+    return NextResponse.json(
+      { message: 'Error creating project', error: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }

@@ -1,23 +1,34 @@
-import mongoose from 'mongoose';
+// src/lib/db.ts
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
+import { MongoClient } from 'mongodb';
 
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable');
+const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/jobboard';
+const options = {};
+
+let client;
+let clientPromise: Promise<MongoClient>;
+
+if (!process.env.MONGODB_URI) {
+  throw new Error('Please add your Mongo URI to .env.local');
 }
 
-let cached = (global as any).mongoose || { conn: null, promise: null };
+declare global {
+  // Using var to augment global object (required for TypeScript global cache)
+  // eslint-disable-next-line no-var
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
 
-export async function connectToDB() {
-  if (cached.conn) return cached.conn;
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI, {
-      dbName: 'jobboard', // Adjust this if needed
-      bufferCommands: false,
-    });
+if (process.env.NODE_ENV === 'development') {
+  // Use cached client in development to prevent multiple connections
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(uri, options);
+    global._mongoClientPromise = client.connect();
   }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
+  clientPromise = global._mongoClientPromise;
+} else {
+  // In production, avoid using global cache
+  client = new MongoClient(uri, options);
+  clientPromise = client.connect();
 }
+
+export default clientPromise;

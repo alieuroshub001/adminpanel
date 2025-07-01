@@ -1,20 +1,105 @@
-import mongoose, { Schema, model, models } from 'mongoose';
+import { Collection, Db, ObjectId, Filter } from 'mongodb';
+import clientPromise from '../lib/db';
+import { JobDB, Job, JobFormData, JobType } from '../types/job';
 
-const jobSchema = new Schema(
-  {
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    department: { type: String, required: true }, // e.g. "Technology"
-    type: {
-      type: String,
-      enum: ['Full-time', 'Part-time', 'Internship', 'Contract'],
-      required: true,
-    },
-    location: { type: String, required: true },
-    isLive: { type: Boolean, default: true },
-  },
-  { timestamps: true }
-);
+let cachedDb: Db;
+let cachedJobs: Collection<JobDB>;
 
-const Job = models.Job || model('Job', jobSchema);
-export default Job;
+async function connectToDatabase() {
+  if (cachedDb && cachedJobs) {
+    return { db: cachedDb, jobsCollection: cachedJobs };
+  }
+
+  const client = await clientPromise;
+  const db = client.db();
+  cachedDb = db;
+  cachedJobs = db.collection<JobDB>('jobs');
+
+  // Create indexes for better query performance
+  await cachedJobs.createIndex({ title: 'text', description: 'text' });
+  await cachedJobs.createIndex({ department: 1 });
+  await cachedJobs.createIndex({ type: 1 });
+  await cachedJobs.createIndex({ location: 'text' });
+
+  return { db, jobsCollection: cachedJobs };
+}
+
+// Helper function to convert DB object to client-safe object
+function toClientJob(job: JobDB): Job {
+  return {
+    ...job,
+    _id: job._id.toString(),
+    createdAt: job.createdAt.toISOString(),
+    updatedAt: job.updatedAt.toISOString()
+  };
+}
+
+export const getJobs = async (
+  department?: string,
+  type?: JobType,
+  searchQuery?: string
+): Promise<Job[]> => {
+  const { jobsCollection } = await connectToDatabase();
+  const query: Filter<JobDB> = {};
+  
+  if (department) query.department = department;
+  if (type) query.type = type;
+  if (searchQuery) {
+    query.$text = { $search: searchQuery };
+  }
+  
+  const jobs = await jobsCollection.find(query).sort({ createdAt: -1 }).toArray();
+  return jobs.map(toClientJob);
+};
+
+export const getJobById = async (id: string): Promise<Job | null> => {
+  const { jobsCollection } = await connectToDatabase();
+  const job = await jobsCollection.findOne({ _id: new ObjectId(id) });
+  return job ? toClientJob(job) : null;
+};
+
+export const createJob = async (jobData: JobFormData): Promise<string> => {
+  const { jobsCollection } = await connectToDatabase();
+
+  const now = new Date();
+  const result = await jobsCollection.insertOne({
+    title: jobData.title,
+    description: jobData.description,
+    department: jobData.department,
+    type: jobData.type,
+    location: jobData.location,
+    createdAt: now,
+    updatedAt: now,
+    _id: new ObjectId()
+  });
+  
+  return result.insertedId.toString();
+};
+
+export const updateJob = async (id: string, jobData: Partial<JobFormData>): Promise<number> => {
+  const { jobsCollection } = await connectToDatabase();
+  
+  const updateData: Partial<JobDB> = {
+    updatedAt: new Date(),
+  };
+
+  // Add only the fields that are provided
+  if (jobData.title !== undefined) updateData.title = jobData.title;
+  if (jobData.description !== undefined) updateData.description = jobData.description;
+  if (jobData.department !== undefined) updateData.department = jobData.department;
+  if (jobData.type !== undefined) updateData.type = jobData.type;
+  if (jobData.location !== undefined) updateData.location = jobData.location;
+
+  const result = await jobsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updateData }
+  );
+  
+  return result.modifiedCount;
+};
+
+export const deleteJob = async (id: string): Promise<number> => {
+  const { jobsCollection } = await connectToDatabase();
+  const result = await jobsCollection.deleteOne({ _id: new ObjectId(id) });
+  return result.deletedCount;
+};
