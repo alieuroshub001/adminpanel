@@ -28,12 +28,11 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
     { icon: MessageSquare, label: 'Testimonials', href: '/testimonial' },
     { icon: BarChart3, label: 'Expertise', href: '/expertise' }, // ✅ Added Expertise
     { icon: Mail, label: 'Contact', href: '/contact' },
-    { icon: Briefcase, label: 'Projects', href: '/projects' },
+    { icon: Briefcase, label: 'Projects', href: '/project' },
     { icon: FileText, label: 'Blogs', href: '/blog' },
-    { icon: Calendar, label: 'Events', href: '/events' },
+    { icon: Calendar, label: 'Events', href: '/event' },
     { icon: ClipboardList, label: 'Jobs', href: '/job' },
-    { icon: Users, label: 'Clients', href: '/clients' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: Users, label: 'Clients', href: '/client' },
   ];
 
   return (
@@ -65,13 +64,6 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
               </Link>
             ))}
           </nav>
-
-          <div className="mt-auto pt-4 border-t border-gray-200">
-            <button className="flex items-center w-full px-4 py-3 rounded-lg hover:bg-gray-100 text-gray-700">
-              <LogOut size={20} className="mr-3" />
-              Sign Out
-            </button>
-          </div>
         </div>
       </div>
 

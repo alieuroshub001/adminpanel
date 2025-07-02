@@ -1,585 +1,378 @@
 'use client';
 
-import { ExpertiseCategory, ExpertiseFormData } from '@/types/expertise';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
-import Image from 'next/image';
-import ReactCrop, { Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
-import { 
-  ChevronDown, Check, X,
-  Headphones, ClipboardList, Database, LayoutDashboard,
-  HardDrive, Search, BarChart2, Server, Keyboard,
-  Code, Smartphone, Globe, Cloud, Cpu
-} from 'lucide-react';
-import React from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { ExpertiseFormData } from '@/types/expertise';
 
-const expertiseCategories: ExpertiseCategory[] = ['business', 'tech'];
+const expertiseSchema = z.object({
+  title: z.string().min(1, 'Title is required'),
+  slug: z.string().min(1, 'Slug is required'),
+  category: z.enum(['business', 'tech']),
+  icon: z.string().min(1, 'Icon is required'),
+  path: z.string().min(1, 'Path is required'),
+  description: z.string().optional(),
+  image: z.string().optional(),
+  imageFile: z.instanceof(File).optional(),
+  imageOption: z.enum(['upload', 'url']),
+  detailImages: z.array(z.string()).optional(),
+  detailImageFiles: z.array(z.instanceof(File)).optional(),
+  isFeatured: z.boolean(),
+  insights: z.array(
+    z.object({
+      title: z.string(),
+      description: z.string(),
+      image: z.string(),
+      metrics: z.array(z.string()),
+    })
+  ).optional(),
+});
 
-// Create a map of available icons
-const availableIcons = {
-  Headphones,
-  ClipboardList,
-  Database,
-  LayoutDashboard,
-  HardDrive,
-  Search,
-  BarChart2,
-  Server,
-  Keyboard,
-  Code,
-  Smartphone,
-  Globe,
-  Cloud,
-  Cpu
-};
+type FormValues = z.infer<typeof expertiseSchema>;
 
-// Array of icon names for filtering and dropdown
-const lucideIcons: string[] = [
-  'Headphones',
-  'ClipboardList',
-  'Database',
-  'LayoutDashboard',
-  'HardDrive',
-  'Search',
-  'BarChart2',
-  'Server',
-  'Keyboard',
-  'Code',
-  'Smartphone',
-  'Globe',
-  'Cloud',
-  'Cpu'
-];
+interface ExpertiseFormProps {
+  initialData?: ExpertiseFormData & { _id?: string };
+  isEditing?: boolean;
+}
 
-export default function ExpertiseForm({ expertiseId }: { expertiseId?: string }) {
+export default function ExpertiseForm({ initialData, isEditing = false }: ExpertiseFormProps) {
   const router = useRouter();
-  const [isEditing] = useState(!!expertiseId);
-  const [isLoading, setIsLoading] = useState(expertiseId ? true : false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [imageOption, setImageOption] = useState<'upload' | 'url'>('url');
-  const [crop, setCrop] = useState<Crop>();
-  const [completedCrop, setCompletedCrop] = useState<Crop>();
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [isIconDropdownOpen, setIsIconDropdownOpen] = useState(false);
-  const [iconSearch, setIconSearch] = useState('');
-  const imgRef = useRef<HTMLImageElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState(initialData?.image || '');
+  const [detailImagesPreviews, setDetailImagesPreviews] = useState<string[]>(initialData?.detailImages || []);
+  const [insightsInput, setInsightsInput] = useState(initialData?.insights ? JSON.stringify(initialData.insights, null, 2) : '');
 
-  const [formData, setFormData] = useState<ExpertiseFormData>({
-    title: '',
-    slug: '',
-    category: 'tech',
-    icon: '',
-    image: '',
-    path: '',
-    description: '',
-    isFeatured: false,
-    imageOption: 'url'
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(expertiseSchema),
+    defaultValues: {
+      title: initialData?.title || '',
+      slug: initialData?.slug || '',
+      category: initialData?.category || 'business',
+      icon: initialData?.icon || '',
+      path: initialData?.path || '',
+      description: initialData?.description || '',
+      image: initialData?.image || '',
+      imageOption: initialData?.imageOption || 'url',
+      detailImages: initialData?.detailImages || [],
+      isFeatured: initialData?.isFeatured || false,
+      insights: initialData?.insights || [],
+    }
   });
 
-  // Filter icons based on search
-  const filteredIcons: string[] = lucideIcons.filter((icon: string) => 
-    icon.toLowerCase().includes(iconSearch.toLowerCase())
-  );
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsIconDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  const imageOption = watch('imageOption');
 
   useEffect(() => {
-    if (expertiseId) {
-      const fetchExpertise = async () => {
-        try {
-          const response = await fetch(`/api/expertise/${expertiseId}`);
-          if (!response.ok) throw new Error('Failed to fetch expertise');
-          const expertise = await response.json();
-          setFormData({
-            title: expertise.title,
-            slug: expertise.slug,
-            category: expertise.category,
-            icon: expertise.icon,
-            image: expertise.image,
-            path: expertise.path,
-            description: expertise.description || '',
-            isFeatured: expertise.isFeatured || false,
-            imageOption: 'url'
-          });
-        } catch (error) {
-          console.error('Error fetching expertise:', error);
-          setError('Failed to load expertise data');
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchExpertise();
+    if (initialData) {
+      setValue('title', initialData.title);
+      setValue('slug', initialData.slug);
+      setValue('category', initialData.category);
+      setValue('icon', initialData.icon);
+      setValue('path', initialData.path);
+      setValue('description', initialData.description || '');
+      setValue('image', initialData.image || '');
+      setValue('imageOption', initialData.imageOption || 'url');
+      setValue('detailImages', initialData.detailImages || []);
+      setValue('isFeatured', initialData.isFeatured || false);
+      setValue('insights', initialData.insights || []);
+      setImagePreview(initialData.image || '');
+      setDetailImagesPreviews(initialData.detailImages || []);
+      setInsightsInput(initialData.insights ? JSON.stringify(initialData.insights, null, 2) : '');
     }
-  }, [expertiseId]);
+  }, [initialData, setValue]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setCrop(undefined);
-      const reader = new FileReader();
-      reader.addEventListener('load', () => {
-        setImgSrc(reader.result?.toString() || '');
-      });
-      reader.readAsDataURL(e.target.files[0]);
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setValue('imageFile', file);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    setFormData(prev => ({ ...prev, image: url }));
-  };
-
-  const handleImageOptionChange = (option: 'upload' | 'url') => {
-    setImageOption(option);
-    setFormData(prev => ({ ...prev, imageOption: option }));
-    if (option === 'upload') {
-      setFormData(prev => ({ ...prev, image: '' }));
-    } else {
-      setImgSrc(null);
+  const handleDetailImagesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setValue('detailImageFiles', files);
+      const previews = files.map(file => URL.createObjectURL(file));
+      setDetailImagesPreviews(previews);
     }
   };
 
-  // Function to create a cropped image blob
-  async function getCroppedImg(image: HTMLImageElement, crop: Crop): Promise<Blob | null> {
-    const canvas = document.createElement('canvas');
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
-    canvas.width = crop.width;
-    canvas.height = crop.height;
-    const ctx = canvas.getContext('2d');
+  const handleInsightsChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInsightsInput(value);
+    try {
+      const insights = JSON.parse(value);
+      setValue('insights', insights);
+    } catch (error) {
+      // Invalid JSON, don't update
+    }
+  };
 
-    if (!ctx) return null;
-
-    ctx.drawImage(
-      image,
-      crop.x * scaleX,
-      crop.y * scaleY,
-      crop.width * scaleX,
-      crop.height * scaleY,
-      0,
-      0,
-      crop.width,
-      crop.height
-    );
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        resolve(blob);
-      }, 'image/jpeg', 0.9);
-    });
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setIsSubmitting(true);
+  const onSubmit = handleSubmit(async (data) => {
+    setIsLoading(true);
     
     try {
-      const formDataToSend = new FormData();
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formDataToSend.append(key, String(value));
-        }
-      });
+      const formData = new FormData();
+      formData.append('title', data.title);
+      formData.append('slug', data.slug);
+      formData.append('category', data.category);
+      formData.append('icon', data.icon);
+      formData.append('path', data.path);
+      formData.append('description', data.description || '');
+      formData.append('imageOption', data.imageOption);
+      formData.append('isFeatured', data.isFeatured.toString());
+      formData.append('insights', JSON.stringify(data.insights || []));
 
-      // If we have a completed crop and image source, create a cropped image
-      if (completedCrop && imgSrc && imgRef.current) {
-        const croppedImageBlob = await getCroppedImg(imgRef.current, completedCrop);
-        if (croppedImageBlob) {
-          formDataToSend.append('imageFile', croppedImageBlob);
-        }
+      if (data.imageOption === 'upload' && data.imageFile) {
+        formData.append('imageFile', data.imageFile);
+      } else if (data.imageOption === 'url') {
+        formData.append('image', data.image || '');
       }
 
-      const url = isEditing ? `/api/expertise/${expertiseId}` : '/api/expertise';
-      const method = isEditing ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        body: formDataToSend,
-      });
-      
+      if (data.detailImageFiles && data.detailImageFiles.length > 0) {
+        data.detailImageFiles.forEach((file: string | Blob) => {
+          formData.append('detailImageFiles', file);
+        });
+      } else {
+        formData.append('detailImages', JSON.stringify(data.detailImages || []));
+      }
+
+      let response;
+      if (isEditing && initialData?._id) {
+        response = await fetch(`/api/expertise/${initialData._id}`, {
+          method: 'PUT',
+          body: formData,
+        });
+      } else {
+        response = await fetch('/api/expertise', {
+          method: 'POST',
+          body: formData,
+        });
+      }
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save expertise');
+        throw new Error(response.statusText);
       }
-      
+
+      toast.success(`Expertise ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/expertise');
       router.refresh();
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setError(error instanceof Error ? error.message : 'An unknown error occurred');
+      toast.error('Something went wrong. Please try again.');
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
-  };
+  });
 
-  const clearImage = () => {
-    if (imageOption === 'url') {
-      setFormData(prev => ({ ...prev, image: '' }));
-    } else {
-      setImgSrc(null);
-      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-    }
-  };
 
-  const handleIconSelect = (icon: string) => {
-    setFormData(prev => ({ ...prev, icon }));
-    setIsIconDropdownOpen(false);
-    setIconSearch('');
-  };
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--primary)]"></div>
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold">
-          {isEditing ? 'Edit Expertise' : 'Create New Expertise'}
-        </h1>
-        <p className="text-[var(--foreground)]/70">
-          {isEditing ? 'Update the expertise details below' : 'Fill in the details to create a new expertise'}
-        </p>
-      </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
-          {error}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-              Title *
-            </label>
-            <input
+    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-sm">
+      <h2 className="text-2xl font-bold mb-6">
+        {isEditing ? 'Edit Expertise' : 'Add New Expertise'}
+      </h2>
+      
+      <form onSubmit={onSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title *</Label>
+            <Input
               id="title"
-              name="title"
-              type="text"
-              required
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-              placeholder="e.g. Web Development"
+              {...register('title')}
+              placeholder="Enter expertise title"
             />
+            {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
           </div>
 
-          <div>
-            <label htmlFor="slug" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-              Slug (URL identifier) *
-            </label>
-            <input
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug *</Label>
+            <Input
               id="slug"
-              name="slug"
-              type="text"
-              required
-              value={formData.slug}
-              onChange={handleChange}
-              className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-              placeholder="e.g. web-development"
+              {...register('slug')}
+              placeholder="Enter URL slug"
             />
+            {errors.slug && <p className="text-sm text-red-500">{errors.slug.message}</p>}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="category" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-              Category *
-            </label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
             <select
               id="category"
-              name="category"
-              required
-              value={formData.category}
-              onChange={handleChange}
-              className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+              {...register('category')}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {expertiseCategories.map((category) => (
-                <option key={category} value={category}>
-                  {category.charAt(0).toUpperCase() + category.slice(1)}
-                </option>
-              ))}
+              <option value="business">Business</option>
+              <option value="tech">Tech</option>
             </select>
+            {errors.category && <p className="text-sm text-red-500">{errors.category.message}</p>}
           </div>
 
-          <div className="relative" ref={dropdownRef}>
-            <label htmlFor="icon" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-              Icon *
-            </label>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setIsIconDropdownOpen(!isIconDropdownOpen)}
-                className="w-full flex items-center justify-between bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-              >
-                <div className="flex items-center">
-                  {formData.icon && lucideIcons[formData.icon as keyof typeof lucideIcons] ? (
-                    <>
-                      {React.createElement(lucideIcons[formData.icon as keyof typeof lucideIcons] as React.ElementType, { className: "w-5 h-5 mr-2" })}
-                      <span>{formData.icon}</span>
-                    </>
-                  ) : (
-                    <span>Select an icon</span>
-                  )}
-                </div>
-                <ChevronDown className="w-4 h-4 ml-2" />
-              </button>
-              
-             {isIconDropdownOpen && (
-    <div className="absolute z-10 mt-1 w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg shadow-lg max-h-60 overflow-auto">
-      <div className="p-2 sticky top-0 bg-[var(--background)]">
-        <input
-          type="text"
-          placeholder="Search icons..."
-          value={iconSearch}
-          onChange={(e) => setIconSearch(e.target.value)}
-          className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-          autoFocus
-        />
-      </div>
-      <div className="divide-y divide-[var(--secondary)]/20">
-        {filteredIcons.length > 0 ? (
-          filteredIcons.map((icon: string) => {
-            const IconComponent = availableIcons[icon as keyof typeof availableIcons];
-            return (
-              <button
-                key={icon}
-                type="button"
-                onClick={() => handleIconSelect(icon)}
-                className={`w-full flex items-center px-4 py-2 text-left hover:bg-[var(--secondary)]/10 ${formData.icon === icon ? 'bg-[var(--primary)]/10' : ''}`}
-              >
-                <IconComponent className="w-5 h-5 mr-3" />
-                <span className="flex-1">{icon}</span>
-                {formData.icon === icon && <Check className="w-4 h-4 text-[var(--primary)]" />}
-              </button>
-            );
-          })
-        ) : (
-          <div className="p-4 text-center text-[var(--foreground)]/70">
-            No icons found
-          </div>
-        )}
-      </div>
-    </div>
-  )}
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="icon">Icon *</Label>
+            <Input
+              id="icon"
+              {...register('icon')}
+              placeholder="Enter icon name (e.g., fa-chart-line)"
+            />
+            {errors.icon && <p className="text-sm text-red-500">{errors.icon.message}</p>}
           </div>
         </div>
 
-        <div>
-          <label htmlFor="path" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-            Path *
-            <span className="text-xs text-[var(--foreground)]/50 ml-1">(Where this expertise links to)</span>
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="path">Path *</Label>
+          <Input
             id="path"
-            name="path"
-            type="text"
-            required
-            value={formData.path}
-            onChange={handleChange}
-            className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-            placeholder="e.g. /expertise/web-development"
+            {...register('path')}
+            placeholder="Enter path (e.g., /business/consulting)"
           />
+          {errors.path && <p className="text-sm text-red-500">{errors.path.message}</p>}
         </div>
 
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium text-[var(--foreground)] mb-1">
-            Description
-          </label>
-          <textarea
+        <div className="space-y-2">
+          <Label htmlFor="description">Description</Label>
+          <Textarea
             id="description"
-            name="description"
-            rows={4}
-            value={formData.description}
-            onChange={handleChange}
-            className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-            placeholder="Brief description of this expertise..."
+            {...register('description')}
+            placeholder="Enter description"
+            rows={3}
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-[var(--foreground)] mb-2">
-            Image *
-          </label>
-          
-          <div className="flex gap-4 mb-4">
-            <button
-              type="button"
-              onClick={() => handleImageOptionChange('url')}
-              className={`px-4 py-2 rounded-lg ${imageOption === 'url' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--secondary)]/20'}`}
-            >
-              Image URL
-            </button>
-            <button
-              type="button"
-              onClick={() => handleImageOptionChange('upload')}
-              className={`px-4 py-2 rounded-lg ${imageOption === 'upload' ? 'bg-[var(--primary)] text-white' : 'bg-[var(--secondary)]/20'}`}
-            >
-              Upload Image
-            </button>
+        <div className="space-y-2">
+          <Label>Main Image</Label>
+          <div className="flex items-center space-x-4 mb-2">
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id="image-url"
+                value="url"
+                checked={imageOption === 'url'}
+                onChange={() => setValue('imageOption', 'url')}
+              />
+              <Label htmlFor="image-url">Image URL</Label>
+            </div>
+            <div className="flex items-center space-x-2">
+              <input
+                type="radio"
+                id="image-upload"
+                value="upload"
+                checked={imageOption === 'upload'}
+                onChange={() => setValue('imageOption', 'upload')}
+              />
+              <Label htmlFor="image-upload">Upload Image</Label>
+            </div>
           </div>
 
           {imageOption === 'url' ? (
-          <div className="space-y-2">
-            <div className="relative">
-              <input
-                type="url"
-                name="image"
-                value={formData.image}
-                onChange={handleImageUrlChange}
-                placeholder="https://example.com/image.jpg"
-                className="w-full bg-[var(--background)] border border-[var(--secondary)] rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-                required
+            <div className="space-y-2">
+              <Input
+                id="image"
+                {...register('image')}
+                placeholder="Enter image URL"
               />
-              {formData.image && (
-                <button
-                  type="button"
-                  onClick={clearImage}
-                  className="absolute right-2 top-2 p-1 text-[var(--foreground)]/50 hover:text-[var(--foreground)]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+              {imagePreview && (
+                <div className="mt-2">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="h-40 w-full object-cover rounded-md"
+                  />
+                </div>
               )}
             </div>
-            {formData.image && (
-              <div className="mt-2 w-32 h-32 rounded-lg overflow-hidden border border-[var(--secondary)] relative">
-                <Image
-                  src={formData.image}
-                  alt="Preview"
-                  width={128}
-                  height={128}
-                  className="w-full h-full object-cover"
-                  onError={() => setFormData(prev => ({ ...prev, image: '' }))}
+          ) : (
+            <div className="space-y-2">
+              <Input
+                id="imageFile"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+              />
+              {imagePreview && (
+                <div className="mt-2">
+                  <img 
+                    src={imagePreview} 
+                    alt="Preview" 
+                    className="h-40 w-full object-cover rounded-md"
+                  />
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Detail Images</Label>
+          <Input
+            id="detailImages"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleDetailImagesChange}
+          />
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+            {detailImagesPreviews.map((preview, index) => (
+              <div key={index} className="relative">
+                <img
+                  src={preview}
+                  alt={`Detail preview ${index + 1}`}
+                  className="h-32 w-full object-cover rounded-md"
                 />
               </div>
-            )}
+            ))}
           </div>
-        ) : (
-          <div className="space-y-4">
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center space-x-2">
             <input
-              type="file"
-              accept="image/*"
-              onChange={onSelectFile}
-              className="block w-full text-sm text-[var(--foreground)]/70
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-semibold
-                file:bg-[var(--primary)]/10 file:text-[var(--primary)]
-                hover:file:bg-[var(--primary)]/20"
-              required={imageOption === 'upload'}
+              type="checkbox"
+              id="isFeatured"
+              {...register('isFeatured')}
             />
-            
-            {imgSrc && (
-              <div className="mt-4 space-y-2">
-                <div className="relative">
-                  <ReactCrop
-                    crop={crop}
-                    onChange={c => setCrop(c)}
-                    onComplete={c => setCompletedCrop(c)}
-                    aspect={16/9}
-                    className="max-w-full max-h-96"
-                  >
-                    <Image
-                      ref={imgRef}
-                      src={imgSrc}
-                      alt="Crop preview"
-                      width={800}
-                      height={450}
-                      onLoad={() => {
-                        setCrop({
-                          unit: '%',
-                          width: 100,
-                          height: 100,
-                          x: 0,
-                          y: 0
-                        });
-                      }}
-                    />
-                  </ReactCrop>
-                  <button
-                    type="button"
-                    onClick={clearImage}
-                    className="absolute -top-3 -right-3 p-1 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-sm text-[var(--foreground)]/70">
-                  Drag to select the area you want to crop (16:9 aspect ratio)
-                </p>
-              </div>
-            )}
+            <Label htmlFor="isFeatured">Featured Expertise</Label>
           </div>
-        )}
         </div>
 
-
-        <div className="flex items-center">
-          <input
-            type="checkbox"
-            id="isFeatured"
-            name="isFeatured"
-            checked={formData.isFeatured}
-            onChange={(e) => setFormData({...formData, isFeatured: e.target.checked})}
-            className="h-4 w-4 text-[var(--primary)] focus:ring-[var(--primary)] rounded"
+        <div className="space-y-2">
+          <Label htmlFor="insights">Insights (JSON format)</Label>
+          <Textarea
+            id="insights"
+            value={insightsInput}
+            onChange={handleInsightsChange}
+            placeholder="Enter insights in JSON format"
+            rows={8}
           />
-          <label htmlFor="isFeatured" className="ml-2 block text-sm text-[var(--foreground)]">
-            <span className="font-medium">Feature this expertise</span>
-            <span className="text-xs text-[var(--foreground)]/50 ml-1">(Show prominently on the site)</span>
-          </label>
+          {errors.insights && <p className="text-sm text-red-500">{errors.insights.message}</p>}
         </div>
 
-        <div className="flex justify-end space-x-4 pt-6">
-          <button
+        <div className="flex justify-end space-x-4 pt-4">
+          <Button
             type="button"
+            variant="outline"
             onClick={() => router.push('/expertise')}
-            className="px-4 py-2 border border-[var(--secondary)] rounded-lg font-medium text-[var(--foreground)] hover:bg-[var(--secondary)]/20 transition"
-            disabled={isSubmitting}
+            disabled={isLoading}
           >
             Cancel
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 bg-[var(--primary)] text-white rounded-lg font-medium hover:bg-[var(--primary)]/90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {isEditing ? 'Saving...' : 'Creating...'}
-              </span>
-            ) : (
-              isEditing ? 'Save Changes' : 'Create Expertise'
-            )}
-          </button>
+          </Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? 'Saving...' : isEditing ? 'Update Expertise' : 'Add Expertise'}
+          </Button>
         </div>
       </form>
     </div>

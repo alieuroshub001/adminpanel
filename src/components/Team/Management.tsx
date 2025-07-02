@@ -148,12 +148,6 @@ export default function TeamMemberManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/team/${member._id}`)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
                           onClick={() => router.push(`/team/edit/${member._id}`)}
                         >
                           <Edit className="mr-2 h-4 w-4" />

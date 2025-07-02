@@ -172,12 +172,6 @@ export default function BlogManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/blog/${post.slug}`)}
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          View
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
                           onClick={() => router.push(`/blog/edit/${post._id}`)}
                         >
                           <Edit className="mr-2 h-4 w-4" />
