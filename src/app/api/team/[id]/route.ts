@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getTeamMemberById, updateTeamMember, deleteTeamMember } from '@/models/teamMember';
+import { getTeamMemberById, updateTeamMember, deleteTeamMember } from '@/models/team';
 import { ObjectId } from 'mongodb';
 
 export async function GET(

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getContactCardById, updateContactCard, deleteContactCard } from '@/models/contactCard';
+import { getContactCardById, updateContactCard, deleteContactCard } from '@/models/contact';
 import { ObjectId } from 'mongodb';
 import { ContactCardFormData } from '@/types/contactCard';
 

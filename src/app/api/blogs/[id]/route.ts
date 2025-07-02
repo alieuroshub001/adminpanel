@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getBlogPostById, updateBlogPost, deleteBlogPost, toggleBlogPostFeatured } from '@/models/blogPost';
+import { getBlogPostById, updateBlogPost, deleteBlogPost, toggleBlogPostFeatured } from '@/models/blog';
 import { ObjectId } from 'mongodb';
 import { BlogPostFormData } from '@/types/blogPost';
 

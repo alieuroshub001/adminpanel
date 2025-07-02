@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClientLogo, getClientLogos } from '@/models/clientLogo';
+import { createClientLogo, getClientLogos } from '@/models/client';
 import { ClientLogoFormData, ImageSource, LogoLine } from '@/types/clientLogo';
 
 export async function GET() {

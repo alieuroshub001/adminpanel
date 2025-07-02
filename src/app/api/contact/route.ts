@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createContactCard, getContactCards } from '@/models/contactCard';
+import { createContactCard, getContactCards } from '@/models/contact';
 import { ContactCardFormData } from '@/types/contactCard';
 
 export async function GET() {

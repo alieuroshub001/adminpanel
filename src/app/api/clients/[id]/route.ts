@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getClientLogoById, updateClientLogo, deleteClientLogo } from '@/models/clientLogo';
+import { getClientLogoById, updateClientLogo, deleteClientLogo } from '@/models/client';
 import { ObjectId } from 'mongodb';
 import { ClientLogoFormData, LogoLine, ImageSource } from '@/types/clientLogo';
 
