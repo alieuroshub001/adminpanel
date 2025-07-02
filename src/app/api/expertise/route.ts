@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createExpertise, getExpertises } from '@/models/expertise';
+import { createExpertise, getExpertises } from '@/models/expertises';
 import { ExpertiseFormData, ExpertiseCategory } from '@/types/expertise';
 
 export async function GET(request: Request) {

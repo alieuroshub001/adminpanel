@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getProjectById, updateProject, deleteProject, toggleProjectFeatured } from '@/models/project';
+import { getProjectById, updateProject, deleteProject, toggleProjectFeatured } from '@/models/projects';
 import { ObjectId } from 'mongodb';
 import { ProjectStatus } from '@/types/project';
 

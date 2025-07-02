@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getExpertiseById, updateExpertise, deleteExpertise, toggleExpertiseFeatured } from '@/models/expertise';
+import { getExpertiseById, updateExpertise, deleteExpertise, toggleExpertiseFeatured } from '@/models/expertises';
 import { ObjectId } from 'mongodb';
 import { ExpertiseFormData, ExpertiseCategory } from '@/types/expertise';
 

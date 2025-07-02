@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getEventById, updateEvent, deleteEvent, toggleEventFeatured, incrementEventAttendees } from '@/models/event';
+import { getEventById, updateEvent, deleteEvent, toggleEventFeatured, incrementEventAttendees } from '@/models/events';
 import { ObjectId } from 'mongodb';
 import { EventFormData } from '@/types/event';
 

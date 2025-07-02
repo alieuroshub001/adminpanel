@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createEvent, getEvents } from '@/models/event';
+import { createEvent, getEvents } from '@/models/events';
 import { EventFormData } from '@/types/event';
 
 export async function GET(request: Request) {

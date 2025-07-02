@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getJobById, updateJob, deleteJob } from '@/models/job';
+import { getJobById, updateJob, deleteJob } from '@/models/jobs';
 import { ObjectId } from 'mongodb';
 import { JobType } from '@/types/job';
 

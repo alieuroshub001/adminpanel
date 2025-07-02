@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getTestimonialById, updateTestimonial, deleteTestimonial, toggleTestimonialFeatured } from '@/models/testimonial';
+import { getTestimonialById, updateTestimonial, deleteTestimonial, toggleTestimonialFeatured } from '@/models/testimonials';
 import { ObjectId } from 'mongodb';
 
 export async function GET(

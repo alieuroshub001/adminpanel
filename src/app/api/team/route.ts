@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getTeamMembers, createTeamMember } from '@/models/team';
+import { getTeamMembers, createTeamMember } from '@/models/teams';
 
 export async function GET() {
   try {

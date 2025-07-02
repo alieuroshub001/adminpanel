@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getJobs, createJob } from '@/models/job';
+import { getJobs, createJob } from '@/models/jobs';
 import { JobType } from '@/types/job';
 
 export async function GET(request: Request) {
