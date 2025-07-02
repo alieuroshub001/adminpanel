@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createBlogPost, getBlogPosts } from '../../../models/blogPost';
+import { createBlogPost, getBlogPosts } from '@/models/blogPost';
 import { BlogPostFormData, ImageSource } from '@/types/blogPost';
 
 export async function GET() {
