@@ -2,11 +2,14 @@
 import ProjectForm from '@/components/Projects/Form';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AdminEditProjectPage({ params }: PageProps) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/projects/${params.id}`, {
+  // Await the params Promise
+  const { id } = await params;
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/projects/${id}`, {
     cache: 'no-store',
   });
 

@@ -2,11 +2,14 @@
 import ExpertiseForm from '@/components/Expertise/Form';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AdminEditExpertisePage({ params }: PageProps) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/expertise/${params.id}`, {
+  // Await the params Promise
+  const { id } = await params;
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/expertise/${id}`, {
     cache: 'no-store',
   });
 

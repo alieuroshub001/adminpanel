@@ -2,11 +2,14 @@
 import ContactCardForm from '@/components/Contact/Form';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AdminEditContactCardPage({ params }: PageProps) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/contact/${params.id}`, {
+  // Await the params Promise
+  const { id } = await params;
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/contact/${id}`, {
     cache: 'no-store',
   });
 

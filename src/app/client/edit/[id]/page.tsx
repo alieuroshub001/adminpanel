@@ -1,11 +1,15 @@
+// src/app/client/edit/[id]/page.tsx (or wherever this file is located)
 import ClientLogoForm from '@/components/Clients/Form';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AdminEditClientLogoPage({ params }: PageProps) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/clients/${params.id}`, {
+  // Await the params Promise
+  const { id } = await params;
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/clients/${id}`, {
     cache: 'no-store',
   });
 

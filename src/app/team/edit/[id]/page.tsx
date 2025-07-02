@@ -2,11 +2,14 @@
 import TeamMemberForm from '@/components/Team/Form';
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function AdminEditTeamMemberPage({ params }: PageProps) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/team/${params.id}`, {
+  // Await the params Promise
+  const { id } = await params;
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/team/${id}`, {
     cache: 'no-store',
   });
 
