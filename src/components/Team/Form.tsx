@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { TeamMemberFormData } from '@/types/teamMember';
+import Image from 'next/image';
 
 const teamMemberSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -161,7 +162,7 @@ export default function TeamMemberForm({ initialData, isEditing = false }: TeamM
       toast.success(`Team member ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/team');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -231,9 +232,11 @@ export default function TeamMemberForm({ initialData, isEditing = false }: TeamM
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={160}
+                    height={160}
                     className="h-40 w-40 object-cover rounded-full"
                   />
                 </div>
@@ -249,9 +252,11 @@ export default function TeamMemberForm({ initialData, isEditing = false }: TeamM
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={160}
+                    height={160}
                     className="h-40 w-40 object-cover rounded-full"
                   />
                 </div>

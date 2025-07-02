@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { EventFormData } from '@/types/event';
+import Image from 'next/image';
 
 const eventSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -136,7 +137,7 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
       toast.success(`Event ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/event');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -228,10 +229,13 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}
@@ -246,10 +250,13 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}

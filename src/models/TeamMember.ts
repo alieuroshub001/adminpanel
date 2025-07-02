@@ -1,7 +1,7 @@
-import { Collection, Db, ObjectId, Filter } from 'mongodb';
+import { Collection, Db, ObjectId } from 'mongodb';
 import clientPromise from '../lib/db';
 import cloudinary from '../lib/cloudinary';
-import { TeamMemberDB, TeamMember, TeamMemberFormData, SocialLinks } from '../types/teamMember';
+import { TeamMemberDB, TeamMember, TeamMemberFormData } from '../types/teamMember';
 
 let cachedDb: Db;
 let cachedTeamMembers: Collection<TeamMemberDB>;

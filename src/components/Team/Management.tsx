@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { TeamMember } from '@/types/teamMember';
 
@@ -37,7 +38,7 @@ export default function TeamMemberManagement() {
         }
         const data = await response.json();
         setTeamMembers(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function TeamMemberManagement() {
 
       toast.success('Team member deleted successfully');
       setTeamMembers(teamMembers.filter(member => member._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -110,14 +111,16 @@ export default function TeamMemberManagement() {
               filteredMembers.map((member) => (
                 <TableRow key={member._id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center space-x-4">
                       {member.image && (
-                        <img
+                        <Image
                           src={member.image}
                           alt={member.name}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover rounded-full"
                         />
                       )}
+                      <div>
                       <div>
                         <div>{member.name}</div>
                         {member.social?.linkedin && (

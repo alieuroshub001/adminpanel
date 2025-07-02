@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContactCard } from '@/types/contactCard';
 import { Mail, Phone, MapPin, Globe, MessageSquare, User } from 'lucide-react';
@@ -50,7 +50,7 @@ export default function ContactCardManagement() {
         }
         const data = await response.json();
         setContactCards(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -74,7 +74,7 @@ export default function ContactCardManagement() {
 
       toast.success('Contact card deleted successfully');
       setContactCards(contactCards.filter(card => card._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };

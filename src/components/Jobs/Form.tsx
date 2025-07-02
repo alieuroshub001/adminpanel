@@ -84,7 +84,7 @@ export default function JobForm({ initialData, isEditing = false }: JobFormProps
       toast.success(`Job ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/job');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);

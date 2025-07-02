@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -117,7 +118,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
       toast.success(`Testimonial ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/testimonial');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -185,11 +186,13 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
                 {...register('image')}
                 placeholder="Enter image URL"
               />
-              {imagePreview && (
+              {imagePreview && imagePreview.trim() !== '' && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={160}
+                    height={160}
                     className="h-40 w-40 object-cover rounded-full"
                   />
                 </div>
@@ -205,9 +208,11 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={160}
+                    height={160}
                     className="h-40 w-40 object-cover rounded-full"
                   />
                 </div>

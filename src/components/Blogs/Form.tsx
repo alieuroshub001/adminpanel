@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 const blogPostSchema = z.object({
   slug: z.string().min(1, 'Slug is required'),
@@ -163,7 +164,7 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
 
       router.push('/blog');
       router.refresh();
-    } catch (error) {
+    } catch {
      toast.error('Something went wrong. Please try again.');
 
     } finally {
@@ -274,10 +275,13 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={320}
+                    height={160}
                     className="h-40 object-cover rounded"
+                    style={{ width: '100%', height: 'auto' }}
                   />
                 </div>
               )}
@@ -292,10 +296,13 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={320}
+                    height={160}
                     className="h-40 object-cover rounded"
+                    style={{ width: '100%', height: 'auto' }}
                   />
                 </div>
               )}

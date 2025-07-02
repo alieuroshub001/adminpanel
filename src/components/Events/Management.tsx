@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Event } from '@/types/event';
 
@@ -37,7 +38,7 @@ export default function EventManagement() {
         }
         const data = await response.json();
         setEvents(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function EventManagement() {
 
       toast.success('Event deleted successfully');
       setEvents(events.filter(event => event._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -84,7 +85,7 @@ export default function EventManagement() {
       setEvents(events.map(event => 
         event._id === id ? { ...event, isFeatured } : event
       ));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -146,10 +147,12 @@ export default function EventManagement() {
               filteredEvents.map((event) => (
                 <TableRow key={event._id}>
                   <TableCell>
-                    {event.image && (
-                      <img
+                    {event.image && (-
+                      <Image
                         src={event.image}
                         alt={event.title}
+                        width={40}
+                        height={40}
                         className="h-10 w-10 object-cover rounded-md"
                       />
                     )}

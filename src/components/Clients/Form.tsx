@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { LogoLine, ImageSource } from '@/types/clientLogo';
+import Image from 'next/image';
 
 const clientLogoSchema = z.object({
   line: z.number().min(1).max(4),
@@ -103,7 +104,7 @@ export default function ClientLogoForm({ initialData, isEditing = false }: Clien
       toast.success(`Client logo ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/client');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -166,9 +167,11 @@ export default function ClientLogoForm({ initialData, isEditing = false }: Clien
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={400}
+                    height={160}
                     className="h-40 w-full object-contain rounded-md"
                   />
                 </div>
@@ -184,9 +187,11 @@ export default function ClientLogoForm({ initialData, isEditing = false }: Clien
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={400}
+                    height={160}
                     className="h-40 w-full object-contain rounded-md"
                   />
                 </div>

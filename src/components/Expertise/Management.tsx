@@ -18,9 +18,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Expertise } from '@/types/expertise';
+import Image from 'next/image';
 
 export default function ExpertiseManagement() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function ExpertiseManagement() {
         }
         const data = await response.json();
         setExpertises(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function ExpertiseManagement() {
 
       toast.success('Expertise deleted successfully');
       setExpertises(expertises.filter(expertise => expertise._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -84,7 +85,7 @@ export default function ExpertiseManagement() {
       setExpertises(expertises.map(expertise => 
         expertise._id === id ? { ...expertise, isFeatured } : expertise
       ));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -133,11 +134,13 @@ export default function ExpertiseManagement() {
               filteredExpertises.map((expertise) => (
                 <TableRow key={expertise._id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-3">
                       {expertise.image && (
-                        <img
+                        <Image
                           src={expertise.image}
                           alt={expertise.title}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover rounded-md"
                         />
                       )}

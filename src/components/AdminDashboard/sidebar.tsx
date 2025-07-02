@@ -2,7 +2,7 @@
 
 import {
   Home, BarChart3, Users, Mail, Briefcase, FileText,
-  Calendar, Settings, LogOut, X, Users2, MessageSquare,
+  Calendar, X, Users2, MessageSquare,
   ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
@@ -13,8 +13,10 @@ interface SidebarProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+import type { LucideIcon } from 'lucide-react';
+
 interface SidebarItem {
-  icon: any;
+  icon: LucideIcon;
   label: string;
   href: string;
 }

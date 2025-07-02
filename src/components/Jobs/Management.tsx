@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Job } from '@/types/job';
 
@@ -38,7 +38,7 @@ export default function JobManagement() {
         }
         const data = await response.json();
         setJobs(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -62,7 +62,7 @@ export default function JobManagement() {
 
       toast.success('Job deleted successfully');
       setJobs(jobs.filter(job => job._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };

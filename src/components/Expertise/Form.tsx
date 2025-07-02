@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ExpertiseFormData } from '@/types/expertise';
+import Image from 'next/image';
 
 const expertiseSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -116,8 +117,7 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
     try {
       const insights = JSON.parse(value);
       setValue('insights', insights);
-    } catch (error) {
-      // Invalid JSON, don't update
+    } catch  {
     }
   };
 
@@ -170,7 +170,7 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
       toast.success(`Expertise ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/expertise');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -287,10 +287,13 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}
@@ -305,10 +308,13 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}
@@ -325,13 +331,16 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
             multiple
             onChange={handleDetailImagesChange}
           />
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
             {detailImagesPreviews.map((preview, index) => (
-              <div key={index} className="relative">
-                <img
+              <div key={index}>
+                <Image
                   src={preview}
                   alt={`Detail preview ${index + 1}`}
+                  width={400}
+                  height={128}
                   className="h-32 w-full object-cover rounded-md"
+                  style={{ width: '100%', height: '128px', objectFit: 'cover', borderRadius: '0.375rem' }}
                 />
               </div>
             ))}

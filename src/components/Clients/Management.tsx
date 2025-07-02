@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,7 +38,7 @@ export default function ClientLogoManagement() {
         }
         const data = await response.json();
         setClientLogos(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function ClientLogoManagement() {
 
       toast.success('Client logo deleted successfully');
       setClientLogos(clientLogos.filter(logo => logo._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -107,11 +108,13 @@ export default function ClientLogoManagement() {
             {filteredClientLogos.length > 0 ? (
               filteredClientLogos.map((logo) => (
                 <TableRow key={logo._id}>
-                  <TableCell>Line {logo.line}</TableCell>
+                  <TableCell>{logo.line}</TableCell>
                   <TableCell>
-                    <img
+                    <Image
                       src={logo.image}
                       alt={`Client logo line ${logo.line}`}
+                      width={128}
+                      height={64}
                       className="h-16 w-32 object-contain"
                     />
                   </TableCell>

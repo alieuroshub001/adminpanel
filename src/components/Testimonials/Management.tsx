@@ -21,6 +21,7 @@ import {
 import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Testimonial } from '@/types/testimonial';
+import Image from 'next/image';
 
 export default function TestimonialManagement() {
   const router = useRouter();
@@ -37,7 +38,7 @@ export default function TestimonialManagement() {
         }
         const data = await response.json();
         setTestimonials(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function TestimonialManagement() {
 
       toast.success('Testimonial deleted successfully');
       setTestimonials(testimonials.filter(testimonial => testimonial._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -84,7 +85,7 @@ export default function TestimonialManagement() {
       setTestimonials(testimonials.map(testimonial => 
         testimonial._id === id ? { ...testimonial, isFeatured: !currentFeatured } : testimonial
       ));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -133,11 +134,13 @@ export default function TestimonialManagement() {
               filteredTestimonials.map((testimonial) => (
                 <TableRow key={testimonial._id}>
                   <TableCell className="font-medium">
-                    <div className="flex items-center space-x-4">
+                    <div className="flex items-center gap-2">
                       {testimonial.image && (
-                        <img
+                        <Image
                           src={testimonial.image}
                           alt={testimonial.name}
+                          width={40}
+                          height={40}
                           className="h-10 w-10 object-cover rounded-full"
                         />
                       )}

@@ -14,7 +14,6 @@ if (!process.env.MONGODB_URI) {
 
 declare global {
   // Using var to augment global object (required for TypeScript global cache)
-  // eslint-disable-next-line no-var
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 

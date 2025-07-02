@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -18,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Project, ProjectStatus } from '@/types/project';
 
@@ -37,7 +38,7 @@ export default function ProjectManagement() {
         }
         const data = await response.json();
         setProjects(data);
-      } catch (error) {
+      } catch {
         toast.error('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);
@@ -61,7 +62,7 @@ export default function ProjectManagement() {
 
       toast.success('Project deleted successfully');
       setProjects(projects.filter(project => project._id !== id));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -84,7 +85,7 @@ export default function ProjectManagement() {
       setProjects(projects.map(project => 
         project._id === id ? { ...project, featured } : project
       ));
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     }
   };
@@ -148,9 +149,11 @@ export default function ProjectManagement() {
                 <TableRow key={project._id}>
                   <TableCell>
                     {project.image && (
-                      <img
+                      <Image
                         src={project.image}
                         alt={project.title}
+                        width={40}
+                        height={40}
                         className="h-10 w-10 object-cover rounded-md"
                       />
                     )}

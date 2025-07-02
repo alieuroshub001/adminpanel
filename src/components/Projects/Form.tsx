@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import Image from 'next/image';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Input } from '@/components/ui/input';
@@ -10,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { ProjectFormData, ProjectStatus } from '@/types/project';
+import { ProjectFormData } from '@/types/project';
 
 const projectSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -150,7 +151,7 @@ export default function ProjectForm({ initialData, isEditing = false }: ProjectF
       toast.success(`Project ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/project');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
@@ -246,10 +247,13 @@ export default function ProjectForm({ initialData, isEditing = false }: ProjectF
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}
@@ -264,10 +268,13 @@ export default function ProjectForm({ initialData, isEditing = false }: ProjectF
               />
               {imagePreview && (
                 <div className="mt-2">
-                  <img 
-                    src={imagePreview} 
-                    alt="Preview" 
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    width={600}
+                    height={160}
                     className="h-40 w-full object-cover rounded-md"
+                    style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '0.375rem' }}
                   />
                 </div>
               )}

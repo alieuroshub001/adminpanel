@@ -99,7 +99,7 @@ export default function ContactCardForm({ initialData, isEditing = false }: Cont
       toast.success(`Contact card ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/contact');
       router.refresh();
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);

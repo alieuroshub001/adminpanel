@@ -7,7 +7,6 @@ import {
   FileText,
   Calendar,
   Bookmark,
-  Menu,
   Search,
   Bell,
   Plus,
@@ -37,7 +36,7 @@ interface DashboardContentProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
-export default function DashboardContent({ sidebarOpen, setSidebarOpen }: DashboardContentProps) {
+export default function DashboardContent({ setSidebarOpen }: DashboardContentProps) {
   // Sample data for the company website
   const websiteStats: WebsiteStat[] = [
     { title: "Team Members", value: "24", icon: Users2, action: "Add Member" },
