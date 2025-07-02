@@ -52,9 +52,7 @@ export const createClientLogo = async (clientLogoData: ClientLogoFormData): Prom
   let imageUrl = clientLogoData.image || '';
   let imageSource: ImageSource = clientLogoData.imageSource || 'link';
   
-  // Handle image based on the selected option
   if (clientLogoData.imageFile) {
-    // Upload image to Cloudinary with optimization
     const arrayBuffer = await clientLogoData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
@@ -63,8 +61,9 @@ export const createClientLogo = async (clientLogoData: ClientLogoFormData): Prom
       `data:${clientLogoData.imageFile.type};base64,${base64String}`,
       { 
         folder: 'client-logos',
+        // Remove all transformations during upload
+        // Only specify quality optimization
         transformation: [
-          { width: 200, height: 100, crop: 'scale' }, // Maintain aspect ratio
           { quality: 'auto' }
         ]
       }
@@ -73,6 +72,7 @@ export const createClientLogo = async (clientLogoData: ClientLogoFormData): Prom
     imageSource = 'upload';
   }
 
+  // Rest of the function remains the same
   const now = new Date();
   const result = await clientLogosCollection.insertOne({
     image: imageUrl,
