@@ -417,3 +417,7 @@ body {
     @apply bg-background text-foreground;
   }
 }
+/* globals.css */
+button, a, [role="button"], input[type="submit"], input[type="button"], .clickable {
+  cursor: pointer;
+}
