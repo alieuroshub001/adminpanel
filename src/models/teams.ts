@@ -25,7 +25,6 @@ async function connectToDatabase() {
   return { db, teamMembersCollection: cachedTeamMembers };
 }
 
-// Helper function to convert DB object to client-safe object
 function toClientTeamMember(member: TeamMemberDB): TeamMember {
   return {
     ...member,
@@ -52,31 +51,29 @@ export const createTeamMember = async (memberData: TeamMemberFormData): Promise<
   
   let imageUrl = memberData.image || '';
   
-  // Handle image based on the selected option
   if (memberData.imageOption === 'upload' && memberData.imageFile) {
-    // Upload image to Cloudinary with cropping options
     const arrayBuffer = await memberData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
     
-    const uploadResult = await cloudinary.uploader.upload(
-      `data:${memberData.imageFile.type};base64,${base64String}`,
-      { 
-        folder: 'team-members',
-        transformation: [
-          { width: 600, height: 600, crop: 'fill', gravity: 'face' }, // Square crop focused on face
-          { quality: 'auto' }
-        ]
-      }
-    );
+   const uploadResult = await cloudinary.uploader.upload(
+  `data:${memberData.imageFile.type};base64,${base64String}`,
+  {
+    folder: 'team-members',
+    transformation: [
+      { quality: 'auto' } // Only optimize, no resizing
+    ]
+  }
+);
+
     imageUrl = uploadResult.secure_url;
   } else if (memberData.imageOption === 'url' && memberData.image) {
-    // Use the provided URL directly
     imageUrl = memberData.image;
   }
 
   const now = new Date();
   const result = await teamMembersCollection.insertOne({
+    _id: new ObjectId(),
     name: memberData.name,
     role: memberData.role,
     image: imageUrl,
@@ -87,11 +84,11 @@ export const createTeamMember = async (memberData: TeamMemberFormData): Promise<
     experience: memberData.experience,
     achievements: memberData.achievements || [],
     skills: memberData.skills || [],
+    featured: memberData.featured || false, // ✅ Added
     createdAt: now,
     updatedAt: now,
-    _id: new ObjectId()
   });
-  
+
   return result.insertedId.toString();
 };
 
@@ -102,7 +99,6 @@ export const updateTeamMember = async (id: string, memberData: Partial<TeamMembe
     updatedAt: new Date(),
   };
 
-  // Add only the fields that are provided
   if (memberData.name !== undefined) updateData.name = memberData.name;
   if (memberData.role !== undefined) updateData.role = memberData.role;
   if (memberData.bio !== undefined) updateData.bio = memberData.bio;
@@ -112,30 +108,27 @@ export const updateTeamMember = async (id: string, memberData: Partial<TeamMembe
   if (memberData.experience !== undefined) updateData.experience = memberData.experience;
   if (memberData.achievements !== undefined) updateData.achievements = memberData.achievements;
   if (memberData.skills !== undefined) updateData.skills = memberData.skills;
+  if (memberData.featured !== undefined) updateData.featured = memberData.featured; // ✅ Added
 
-  // Handle image update based on the selected option
   if (memberData.imageOption === 'upload' && memberData.imageFile) {
-    // Upload new image with cropping
     const arrayBuffer = await memberData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
     
     const uploadResult = await cloudinary.uploader.upload(
-      `data:${memberData.imageFile.type};base64,${base64String}`,
-      { 
-        folder: 'team-members',
-        transformation: [
-          { width: 600, height: 600, crop: 'fill', gravity: 'face' },
-          { quality: 'auto' }
-        ]
-      }
-    );
+  `data:${memberData.imageFile.type};base64,${base64String}`,
+  {
+    folder: 'team-members',
+    transformation: [
+      { quality: 'auto' }
+    ]
+  }
+);
+
     updateData.image = uploadResult.secure_url;
   } else if (memberData.imageOption === 'url' && memberData.image !== undefined) {
-    // Use the provided URL directly
     updateData.image = memberData.image;
   } else if (memberData.image !== undefined) {
-    // Fallback for backward compatibility
     updateData.image = memberData.image;
   }
 

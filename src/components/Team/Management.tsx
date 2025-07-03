@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Plus, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { TeamMember } from '@/types/teamMember';
 
@@ -33,9 +33,7 @@ export default function TeamMemberManagement() {
     const fetchTeamMembers = async () => {
       try {
         const response = await fetch('/api/team');
-        if (!response.ok) {
-          throw new Error('Failed to fetch team members');
-        }
+        if (!response.ok) throw new Error('Failed to fetch team members');
         const data = await response.json();
         setTeamMembers(data);
       } catch {
@@ -56,9 +54,7 @@ export default function TeamMemberManagement() {
         method: 'DELETE',
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete team member');
-      }
+      if (!response.ok) throw new Error('Failed to delete team member');
 
       toast.success('Team member deleted successfully');
       setTeamMembers(teamMembers.filter(member => member._id !== id));
@@ -70,6 +66,7 @@ export default function TeamMemberManagement() {
   const filteredMembers = teamMembers.filter(member =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (member.department?.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (member.skills && member.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
@@ -102,6 +99,7 @@ export default function TeamMemberManagement() {
               <TableHead>Name</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Location</TableHead>
+              <TableHead>Department</TableHead>
               <TableHead>Skills</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -111,6 +109,7 @@ export default function TeamMemberManagement() {
               filteredMembers.map((member) => (
                 <TableRow key={member._id}>
                   <TableCell className="font-medium">
+                    <div className="flex items-center gap-3">
                       {member.image && (
                         <Image
                           src={member.image}
@@ -121,8 +120,15 @@ export default function TeamMemberManagement() {
                         />
                       )}
                       <div>
-                      <div>
-                        <div>{member.name}</div>
+                        <div className="flex items-center gap-1">
+                          <span>{member.name}</span>
+                          {member.featured && (
+                            <span className="ml-1 text-yellow-500 text-xs flex items-center gap-1">
+                              <Star className="h-4 w-4" />
+                              Featured
+                            </span>
+                          )}
+                        </div>
                         {member.social?.linkedin && (
                           <a 
                             href={member.social.linkedin} 
@@ -136,12 +142,19 @@ export default function TeamMemberManagement() {
                       </div>
                     </div>
                   </TableCell>
+
                   <TableCell>{member.role}</TableCell>
                   <TableCell>{member.location || '-'}</TableCell>
+
+                  <TableCell>
+                    {member.featured ? '-' : member.department || '-'}
+                  </TableCell>
+
                   <TableCell>
                     {member.skills?.slice(0, 3).join(', ')}
                     {member.skills && member.skills.length > 3 && '...'}
                   </TableCell>
+
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -170,7 +183,7 @@ export default function TeamMemberManagement() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   {searchTerm ? 'No matching members found' : 'No team members yet'}
                 </TableCell>
               </TableRow>

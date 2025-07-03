@@ -17,7 +17,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    
+
+    const featuredFlag = formData.get('featured') === 'true';
+
     const memberData = {
       name: formData.get('name') as string,
       role: formData.get('role') as string,
@@ -31,6 +33,8 @@ export async function POST(request: Request) {
       experience: formData.get('experience') as string || undefined,
       achievements: JSON.parse(formData.get('achievements') as string) || [],
       skills: JSON.parse(formData.get('skills') as string) || [],
+      featured: featuredFlag,
+      department: !featuredFlag ? (formData.get('department') as string || undefined) : undefined, // ✅ added
     };
 
     // Validate required fields
@@ -41,7 +45,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate image option if provided
+    // Validate department if not featured
+    if (!featuredFlag && !memberData.department) {
+      return NextResponse.json(
+        { message: 'Department is required for non-featured members' },
+        { status: 400 }
+      );
+    }
+
+    // Validate image
     if (memberData.imageOption === 'upload' && !memberData.imageFile) {
       return NextResponse.json(
         { message: 'Image file is required when choosing upload option' },
@@ -57,11 +69,8 @@ export async function POST(request: Request) {
     }
 
     const memberId = await createTeamMember(memberData);
-    
-    return NextResponse.json(
-      { _id: memberId.toString() }, 
-      { status: 201 }
-    );
+
+    return NextResponse.json({ _id: memberId.toString() }, { status: 201 });
   } catch (error) {
     console.error('Error creating team member:', error);
     return NextResponse.json(

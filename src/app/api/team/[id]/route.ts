@@ -17,7 +17,7 @@ export async function GET(
     }
 
     const member = await getTeamMemberById(id);
-    
+
     if (!member) {
       return NextResponse.json(
         { message: 'Team member not found' },
@@ -50,6 +50,8 @@ export async function PUT(
     }
 
     const formData = await request.formData();
+    const featuredFlag = formData.get('featured') === 'true';
+
     const memberData = {
       name: formData.get('name') as string,
       role: formData.get('role') as string,
@@ -63,23 +65,19 @@ export async function PUT(
       experience: formData.get('experience') as string || undefined,
       achievements: JSON.parse(formData.get('achievements') as string) || [],
       skills: JSON.parse(formData.get('skills') as string) || [],
+      featured: featuredFlag,
+      department: !featuredFlag ? (formData.get('department') as string || undefined) : undefined, // ✅ added
     };
 
-    // Validate required fields if provided
-    if (memberData.name !== undefined && !memberData.name) {
-      return NextResponse.json(
-        { message: 'Name is required' },
-        { status: 400 }
-      );
-    }
-    if (memberData.role !== undefined && !memberData.role) {
-      return NextResponse.json(
-        { message: 'Role is required' },
-        { status: 400 }
-      );
+    // Required field validation
+    if (!memberData.name) {
+      return NextResponse.json({ message: 'Name is required' }, { status: 400 });
     }
 
-    // Validate image option if provided
+    if (!memberData.role) {
+      return NextResponse.json({ message: 'Role is required' }, { status: 400 });
+    }
+
     if (memberData.imageOption === 'upload' && !memberData.imageFile) {
       return NextResponse.json(
         { message: 'Image file is required when choosing upload option' },
@@ -94,8 +92,15 @@ export async function PUT(
       );
     }
 
+    if (!featuredFlag && !memberData.department) {
+      return NextResponse.json(
+        { message: 'Department is required for non-featured members' },
+        { status: 400 }
+      );
+    }
+
     const updatedCount = await updateTeamMember(id, memberData);
-    
+
     if (updatedCount === 0) {
       return NextResponse.json(
         { message: 'Team member not found or no changes made' },
@@ -103,10 +108,7 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Error updating team member:', error);
     return NextResponse.json(
@@ -131,7 +133,7 @@ export async function DELETE(
     }
 
     const deletedCount = await deleteTeamMember(id);
-    
+
     if (deletedCount === 0) {
       return NextResponse.json(
         { message: 'Team member not found' },
@@ -139,10 +141,7 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Error deleting team member:', error);
     return NextResponse.json(
