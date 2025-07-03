@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { EventFormData } from '@/types/event';
 import Image from 'next/image';
-import { Calendar, Plane, Gift, Trophy, Award, PartyPopper } from 'lucide-react';
+import { Gift, Trophy, Award, PartyPopper, Bus } from 'lucide-react';
 
 const eventSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -40,7 +40,7 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
   
 
  const categoryOptions = [
-  { id: 'trips', label: 'Company Trips', icon: Plane },
+  { id: 'trips', label: 'Company Trips', icon: Bus },
   { id: 'anniversaries', label: 'Anniversaries', icon: Gift },
   { id: 'employee-month', label: 'Employee of the Month', icon: Trophy },
   { id: 'achievements', label: 'Team Achievements', icon: Award },
