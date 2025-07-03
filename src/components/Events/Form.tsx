@@ -40,7 +40,6 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
   
 
  const categoryOptions = [
-  { id: 'all', label: 'All Events', icon: Calendar },
   { id: 'trips', label: 'Company Trips', icon: Plane },
   { id: 'anniversaries', label: 'Anniversaries', icon: Gift },
   { id: 'employee-month', label: 'Employee of the Month', icon: Trophy },
