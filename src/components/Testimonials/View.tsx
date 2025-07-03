@@ -35,8 +35,12 @@ export default function TestimonialView({ testimonial }: TestimonialViewProps) {
       <div className="flex flex-col md:flex-row gap-8">
         <div className="flex-shrink-0">
           <Avatar className="h-40 w-40">
-            <AvatarImage src={testimonial.image} />
-            <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+            {testimonial.image ? (
+              <AvatarImage src={testimonial.image} alt={testimonial.name} />
+            ) : null}
+            <AvatarFallback>
+              {testimonial.name.charAt(0).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </div>
 
@@ -55,7 +59,10 @@ export default function TestimonialView({ testimonial }: TestimonialViewProps) {
             <h2 className="text-xl font-semibold">Rating</h2>
             <div className="flex">
               {[...Array(5)].map((_, i) => (
-                <span key={i} className={i < testimonial.rating ? 'text-yellow-400 text-2xl' : 'text-gray-300 text-2xl'}>
+                <span
+                  key={i}
+                  className={`text-2xl ${i < testimonial.rating ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
                   ★
                 </span>
               ))}

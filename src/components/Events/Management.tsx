@@ -147,7 +147,7 @@ export default function EventManagement() {
               filteredEvents.map((event) => (
                 <TableRow key={event._id}>
                   <TableCell>
-                    {event.image && (-
+                    {event.image && (
                       <Image
                         src={event.image}
                         alt={event.title}

@@ -21,7 +21,7 @@ import {
 import { MoreHorizontal, Edit, Trash2, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { ContactCard } from '@/types/contactCard';
-import { Mail, Phone, MapPin, Globe, MessageSquare, User } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageSquare, User, Clock } from 'lucide-react';
 
 const getIconComponent = (iconName: string) => {
   switch (iconName) {
@@ -31,6 +31,7 @@ const getIconComponent = (iconName: string) => {
     case 'website': return <Globe className="w-5 h-5" />;
     case 'social': return <MessageSquare className="w-5 h-5" />;
     case 'person': return <User className="w-5 h-5" />;
+    case 'clock': return <Clock className="w-5 h-5" />;
     default: return <Mail className="w-5 h-5" />;
   }
 };

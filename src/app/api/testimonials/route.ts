@@ -11,7 +11,10 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('Error fetching testimonials:', error);
     return NextResponse.json(
-      { message: 'Error fetching testimonials', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error fetching testimonials',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -20,7 +23,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const formData = await request.formData();
-    
+
     const testimonialData = {
       name: formData.get('name') as string,
       role: formData.get('role') as string,
@@ -29,13 +32,20 @@ export async function POST(request: Request) {
       isFeatured: formData.get('isFeatured') === 'true',
       image: formData.get('image') as string || '',
       imageFile: formData.get('imageFile') as File || undefined,
-      imageOption: formData.get('imageOption') as 'upload' | 'url',
+      imageOption: formData.get('imageOption') as 'upload' | 'url' | undefined,
     };
 
     // Validate required fields
-    if (!testimonialData.name || !testimonialData.role || !testimonialData.content || !testimonialData.rating) {
+    if (!testimonialData.name || !testimonialData.role || !testimonialData.content) {
       return NextResponse.json(
-        { message: 'Name, role, content, and rating are required' },
+        { message: 'Name, role, and content are required' },
+        { status: 400 }
+      );
+    }
+
+    if (isNaN(testimonialData.rating)) {
+      return NextResponse.json(
+        { message: 'Rating is required and must be a number' },
         { status: 400 }
       );
     }
@@ -48,7 +58,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate image option if provided
+    // Conditionally validate image input
     if (testimonialData.imageOption === 'upload' && !testimonialData.imageFile) {
       return NextResponse.json(
         { message: 'Image file is required when choosing upload option' },
@@ -64,15 +74,18 @@ export async function POST(request: Request) {
     }
 
     const testimonialId = await createTestimonial(testimonialData);
-    
+
     return NextResponse.json(
-      { _id: testimonialId.toString() }, 
+      { _id: testimonialId.toString() },
       { status: 201 }
     );
   } catch (error) {
     console.error('Error creating testimonial:', error);
     return NextResponse.json(
-      { message: 'Error creating testimonial', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error creating testimonial',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

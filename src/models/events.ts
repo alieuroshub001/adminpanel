@@ -17,11 +17,15 @@ async function connectToDatabase() {
   cachedEvents = db.collection<EventDB>('events');
 
   // Create indexes for better query performance
-  await cachedEvents.createIndex({ title: 'text' });
   await cachedEvents.createIndex({ category: 1 });
   await cachedEvents.createIndex({ date: 1 });
   await cachedEvents.createIndex({ isFeatured: 1 });
-  await cachedEvents.createIndex({ location: 'text' });
+
+  // Unified text index for title and location
+  await cachedEvents.createIndex(
+    { title: 'text', location: 'text' },
+    { name: 'text_index', default_language: 'english' }
+  );
 
   return { db, eventsCollection: cachedEvents };
 }
@@ -62,27 +66,24 @@ export const createEvent = async (eventData: EventFormData): Promise<string> => 
   const { eventsCollection } = await connectToDatabase();
   
   let imageUrl = eventData.image || '';
-  
-  // Handle image based on the selected option
+
   if (eventData.imageOption === 'upload' && eventData.imageFile) {
-    // Upload image to Cloudinary with cropping options
     const arrayBuffer = await eventData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
-    
+
     const uploadResult = await cloudinary.uploader.upload(
       `data:${eventData.imageFile.type};base64,${base64String}`,
-      { 
+      {
         folder: 'events',
         transformation: [
-          { width: 1200, height: 800, crop: 'fill' }, // Event banner size
+          { width: 1200, height: 800, crop: 'fill' },
           { quality: 'auto' }
         ]
       }
     );
     imageUrl = uploadResult.secure_url;
   } else if (eventData.imageOption === 'url' && eventData.image) {
-    // Use the provided URL directly
     imageUrl = eventData.image;
   }
 
@@ -101,18 +102,17 @@ export const createEvent = async (eventData: EventFormData): Promise<string> => 
     updatedAt: now,
     _id: new ObjectId()
   });
-  
+
   return result.insertedId.toString();
 };
 
 export const updateEvent = async (id: string, eventData: Partial<EventFormData>): Promise<number> => {
   const { eventsCollection } = await connectToDatabase();
-  
+
   const updateData: Partial<EventDB> = {
     updatedAt: new Date(),
   };
 
-  // Add only the fields that are provided
   if (eventData.title !== undefined) updateData.title = eventData.title;
   if (eventData.date !== undefined) updateData.date = eventData.date;
   if (eventData.location !== undefined) updateData.location = eventData.location;
@@ -122,16 +122,14 @@ export const updateEvent = async (id: string, eventData: Partial<EventFormData>)
   if (eventData.highlights !== undefined) updateData.highlights = eventData.highlights;
   if (eventData.isFeatured !== undefined) updateData.isFeatured = eventData.isFeatured;
 
-  // Handle image update based on the selected option
   if (eventData.imageOption === 'upload' && eventData.imageFile) {
-    // Upload new image with cropping
     const arrayBuffer = await eventData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
-    
+
     const uploadResult = await cloudinary.uploader.upload(
       `data:${eventData.imageFile.type};base64,${base64String}`,
-      { 
+      {
         folder: 'events',
         transformation: [
           { width: 1200, height: 800, crop: 'fill' },
@@ -141,10 +139,8 @@ export const updateEvent = async (id: string, eventData: Partial<EventFormData>)
     );
     updateData.image = uploadResult.secure_url;
   } else if (eventData.imageOption === 'url' && eventData.image !== undefined) {
-    // Use the provided URL directly
     updateData.image = eventData.image;
   } else if (eventData.image !== undefined) {
-    // Fallback for backward compatibility
     updateData.image = eventData.image;
   }
 
@@ -152,13 +148,13 @@ export const updateEvent = async (id: string, eventData: Partial<EventFormData>)
     { _id: new ObjectId(id) },
     { $set: updateData }
   );
-  
+
   return result.modifiedCount;
 };
 
 export const deleteEvent = async (id: string): Promise<number> => {
   const { eventsCollection } = await connectToDatabase();
-  
+
   const event = await eventsCollection.findOne({ _id: new ObjectId(id) });
   if (event?.image) {
     const publicId = event.image.split('/').pop()?.split('.')[0];

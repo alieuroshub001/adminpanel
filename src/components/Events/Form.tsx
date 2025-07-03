@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { EventFormData } from '@/types/event';
 import Image from 'next/image';
+import { Calendar, Plane, Gift, Trophy, Award, PartyPopper } from 'lucide-react';
 
 const eventSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -36,6 +37,17 @@ interface EventFormProps {
 
 export default function EventForm({ initialData, isEditing = false }: EventFormProps) {
   const router = useRouter();
+  
+
+ const categoryOptions = [
+  { id: 'all', label: 'All Events', icon: Calendar },
+  { id: 'trips', label: 'Company Trips', icon: Plane },
+  { id: 'anniversaries', label: 'Anniversaries', icon: Gift },
+  { id: 'employee-month', label: 'Employee of the Month', icon: Trophy },
+  { id: 'achievements', label: 'Team Achievements', icon: Award },
+  { id: 'celebrations', label: 'Celebrations', icon: PartyPopper }
+];
+
   const [isLoading, setIsLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState(initialData?.image || '');
   const [highlightsInput, setHighlightsInput] = useState(initialData?.highlights?.join('\n') || '');
@@ -162,15 +174,25 @@ export default function EventForm({ initialData, isEditing = false }: EventFormP
             {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
-            <Input
-              id="category"
-              {...register('category')}
-              placeholder="e.g., Conference, Workshop"
-            />
-            {errors.category && <p className="text-sm text-red-500">{errors.category.message}</p>}
-          </div>
+         <div className="space-y-2">
+  <Label htmlFor="category">Category *</Label>
+  <select
+    id="category"
+    {...register('category')}
+    className="w-full border rounded px-3 py-2 bg-white"
+  >
+    <option value="">Select a category</option>
+    {categoryOptions.map(cat => (
+      <option key={cat.id} value={cat.id}>
+        {cat.label}
+      </option>
+    ))}
+  </select>
+  {errors.category && (
+    <p className="text-sm text-red-500">{errors.category.message}</p>
+  )}
+</div>
+
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, Eye, Plus } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, Eye, Plus, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { Testimonial } from '@/types/testimonial';
 import Image from 'next/image';
@@ -71,18 +71,14 @@ export default function TestimonialManagement() {
     try {
       const response = await fetch(`/api/testimonials/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isFeatured: !currentFeatured }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update featured status');
-      }
+      if (!response.ok) throw new Error('Failed to update featured status');
 
       toast.success(`Testimonial ${currentFeatured ? 'unfeatured' : 'featured'}`);
-      setTestimonials(testimonials.map(testimonial => 
+      setTestimonials(testimonials.map(testimonial =>
         testimonial._id === id ? { ...testimonial, isFeatured: !currentFeatured } : testimonial
       ));
     } catch {
@@ -135,7 +131,7 @@ export default function TestimonialManagement() {
                 <TableRow key={testimonial._id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-2">
-                      {testimonial.image && (
+                      {testimonial.image ? (
                         <Image
                           src={testimonial.image}
                           alt={testimonial.name}
@@ -143,6 +139,10 @@ export default function TestimonialManagement() {
                           height={40}
                           className="h-10 w-10 object-cover rounded-full"
                         />
+                      ) : (
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <User className="h-5 w-5 text-gray-500" />
+                        </div>
                       )}
                       <span>{testimonial.name}</span>
                     </div>
@@ -174,15 +174,11 @@ export default function TestimonialManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/testimonial/${testimonial._id}`)}
-                        >
+                        <DropdownMenuItem onClick={() => router.push(`/testimonial/${testimonial._id}`)}>
                           <Eye className="mr-2 h-4 w-4" />
                           View
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => router.push(`/testimonial/edit/${testimonial._id}`)}
-                        >
+                        <DropdownMenuItem onClick={() => router.push(`/testimonial/edit/${testimonial._id}`)}>
                           <Edit className="mr-2 h-4 w-4" />
                           Edit
                         </DropdownMenuItem>

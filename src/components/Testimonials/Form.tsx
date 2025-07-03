@@ -22,7 +22,7 @@ const testimonialSchema = z.object({
   isFeatured: z.boolean(),
   image: z.string().optional(),
   imageFile: z.instanceof(File).optional(),
-  imageOption: z.enum(['upload', 'url']),
+  imageOption: z.enum(['upload', 'url']).optional(), // made optional
 });
 
 type FormValues = z.infer<typeof testimonialSchema>;
@@ -52,7 +52,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
       rating: 5,
       isFeatured: false,
       image: '',
-      imageOption: 'url',
+      imageOption: undefined,
     }
   });
 
@@ -67,7 +67,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
       setValue('rating', initialData.rating);
       setValue('isFeatured', initialData.isFeatured || false);
       setValue('image', initialData.image || '');
-      setValue('imageOption', initialData.imageOption || 'url');
+      setValue('imageOption', initialData.imageOption || undefined);
       setImagePreview(initialData.image || '');
     }
   }, [initialData, setValue]);
@@ -82,7 +82,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
 
   const onSubmit = async (data: FormValues) => {
     setIsLoading(true);
-    
+
     try {
       const formData = new FormData();
       formData.append('name', data.name);
@@ -90,12 +90,15 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
       formData.append('content', data.content);
       formData.append('rating', data.rating.toString());
       formData.append('isFeatured', String(data.isFeatured));
-      formData.append('imageOption', data.imageOption);
 
-      if (data.imageOption === 'upload' && data.imageFile) {
-        formData.append('imageFile', data.imageFile);
-      } else if (data.imageOption === 'url') {
-        formData.append('image', data.image || '');
+      if (data.imageOption) {
+        formData.append('imageOption', data.imageOption);
+
+        if (data.imageOption === 'upload' && data.imageFile) {
+          formData.append('imageFile', data.imageFile);
+        } else if (data.imageOption === 'url') {
+          formData.append('image', data.image || '');
+        }
       }
 
       let response;
@@ -111,9 +114,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
         });
       }
 
-      if (!response.ok) {
-        throw new Error(response.statusText);
-      }
+      if (!response.ok) throw new Error(response.statusText);
 
       toast.success(`Testimonial ${isEditing ? 'updated' : 'created'} successfully`);
       router.push('/testimonial');
@@ -130,32 +131,24 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
       <h2 className="text-2xl font-bold mb-6">
         {isEditing ? 'Edit Testimonial' : 'Add New Testimonial'}
       </h2>
-      
+
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <Label htmlFor="name">Name *</Label>
-            <Input
-              id="name"
-              {...register('name')}
-              placeholder="Enter person's name"
-            />
+            <Input id="name" {...register('name')} placeholder="Enter person's name" />
             {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="role">Role *</Label>
-            <Input
-              id="role"
-              {...register('role')}
-              placeholder="Enter person's role"
-            />
+            <Input id="role" {...register('role')} placeholder="Enter person's role" />
             {errors.role && <p className="text-sm text-red-500">{errors.role.message}</p>}
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label>Profile Image</Label>
+          <Label>Profile Image (optional)</Label>
           <div className="flex items-center space-x-4 mb-2">
             <div className="flex items-center space-x-2">
               <input
@@ -181,12 +174,8 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
 
           {imageOption === 'url' ? (
             <div className="space-y-2">
-              <Input
-                id="image"
-                {...register('image')}
-                placeholder="Enter image URL"
-              />
-              {imagePreview && imagePreview.trim() !== '' && (
+              <Input id="image" {...register('image')} placeholder="Enter image URL" />
+              {imagePreview && (
                 <div className="mt-2">
                   <Image
                     src={imagePreview}
@@ -198,7 +187,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
                 </div>
               )}
             </div>
-          ) : (
+          ) : imageOption === 'upload' ? (
             <div className="space-y-2">
               <Input
                 id="imageFile"
@@ -218,7 +207,7 @@ export default function TestimonialForm({ initialData, isEditing = false }: Test
                 </div>
               )}
             </div>
-          )}
+          ) : null}
         </div>
 
         <div className="space-y-2">

@@ -8,7 +8,7 @@ export type TestimonialDB = {
   content: string;
   rating: number; // 1 to 5
   isFeatured: boolean;
-  image?: string;
+  image?: string; // Optional image link or uploaded image
   createdAt: Date;
   updatedAt: Date;
 };
@@ -27,7 +27,7 @@ export type TestimonialFormData = {
   content: string;
   rating: number;
   isFeatured?: boolean;
-  image?: string;
-  imageFile?: File;
-  imageOption?: 'upload' | 'url'; // To track image input method
+  image?: string; // Optional image URL
+  imageFile?: File; // Optional uploaded image
+  imageOption?: 'upload' | 'url'; // To determine image input method (or undefined if none)
 };

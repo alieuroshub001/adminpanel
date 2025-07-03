@@ -1,5 +1,10 @@
 import { NextResponse, NextRequest } from 'next/server';
-import { getTestimonialById, updateTestimonial, deleteTestimonial, toggleTestimonialFeatured } from '@/models/testimonials';
+import {
+  getTestimonialById,
+  updateTestimonial,
+  deleteTestimonial,
+  toggleTestimonialFeatured,
+} from '@/models/testimonials';
 import { ObjectId } from 'mongodb';
 
 export async function GET(
@@ -17,7 +22,7 @@ export async function GET(
     }
 
     const testimonial = await getTestimonialById(id);
-    
+
     if (!testimonial) {
       return NextResponse.json(
         { message: 'Testimonial not found' },
@@ -29,7 +34,10 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching testimonial:', error);
     return NextResponse.json(
-      { message: 'Error fetching testimonial', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error fetching testimonial',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -58,36 +66,43 @@ export async function PUT(
       isFeatured: formData.get('isFeatured') === 'true',
       image: formData.get('image') as string || '',
       imageFile: formData.get('imageFile') as File || undefined,
-      imageOption: formData.get('imageOption') as 'upload' | 'url',
+      imageOption: formData.get('imageOption') as 'upload' | 'url' | undefined,
     };
 
-    // Validate required fields if provided
-    if (testimonialData.name !== undefined && !testimonialData.name) {
+    // Field validation
+    if (!testimonialData.name) {
       return NextResponse.json(
         { message: 'Name is required' },
         { status: 400 }
       );
     }
-    if (testimonialData.role !== undefined && !testimonialData.role) {
+
+    if (!testimonialData.role) {
       return NextResponse.json(
         { message: 'Role is required' },
         { status: 400 }
       );
     }
-    if (testimonialData.content !== undefined && !testimonialData.content) {
+
+    if (!testimonialData.content) {
       return NextResponse.json(
         { message: 'Content is required' },
         { status: 400 }
       );
     }
-    if (testimonialData.rating !== undefined && (testimonialData.rating < 1 || testimonialData.rating > 5)) {
+
+    if (
+      isNaN(testimonialData.rating) ||
+      testimonialData.rating < 1 ||
+      testimonialData.rating > 5
+    ) {
       return NextResponse.json(
         { message: 'Rating must be between 1 and 5' },
         { status: 400 }
       );
     }
 
-    // Validate image option if provided
+    // Conditionally validate image input
     if (testimonialData.imageOption === 'upload' && !testimonialData.imageFile) {
       return NextResponse.json(
         { message: 'Image file is required when choosing upload option' },
@@ -103,7 +118,7 @@ export async function PUT(
     }
 
     const updatedCount = await updateTestimonial(id, testimonialData);
-    
+
     if (updatedCount === 0) {
       return NextResponse.json(
         { message: 'Testimonial not found or no changes made' },
@@ -111,14 +126,14 @@ export async function PUT(
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Error updating testimonial:', error);
     return NextResponse.json(
-      { message: 'Error updating testimonial', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error updating testimonial',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -139,7 +154,7 @@ export async function DELETE(
     }
 
     const deletedCount = await deleteTestimonial(id);
-    
+
     if (deletedCount === 0) {
       return NextResponse.json(
         { message: 'Testimonial not found' },
@@ -147,14 +162,14 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Error deleting testimonial:', error);
     return NextResponse.json(
-      { message: 'Error deleting testimonial', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error deleting testimonial',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -175,7 +190,7 @@ export async function PATCH(
     }
 
     const { isFeatured } = await request.json();
-    
+
     if (typeof isFeatured !== 'boolean') {
       return NextResponse.json(
         { message: 'isFeatured must be a boolean' },
@@ -184,7 +199,7 @@ export async function PATCH(
     }
 
     const updatedCount = await toggleTestimonialFeatured(id, isFeatured);
-    
+
     if (updatedCount === 0) {
       return NextResponse.json(
         { message: 'Testimonial not found' },
@@ -192,14 +207,14 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {
     console.error('Error updating featured status:', error);
     return NextResponse.json(
-      { message: 'Error updating featured status', error: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        message: 'Error updating featured status',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

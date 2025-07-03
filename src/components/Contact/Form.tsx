@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ContactCardFormData } from '@/types/contactCard';
-import { Mail, Phone, MapPin, Globe, MessageSquare, User } from 'lucide-react';
+import { Mail, Phone, MapPin, Globe, MessageSquare, User, Clock } from 'lucide-react';
 
 const contactCardSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -35,6 +35,7 @@ const iconOptions = [
   { value: 'website', label: 'Website', icon: <Globe className="w-4 h-4" /> },
   { value: 'social', label: 'Social', icon: <MessageSquare className="w-4 h-4" /> },
   { value: 'person', label: 'Person', icon: <User className="w-4 h-4" /> },
+  { value: 'clock', label: 'Clock', icon: <Clock className="w-4 h-4" /> },
 ];
 
 export default function ContactCardForm({ initialData, isEditing = false }: ContactCardFormProps) {
