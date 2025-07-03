@@ -30,23 +30,22 @@ export default function JobManagement() {
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const response = await fetch('/api/jobs');
-        if (!response.ok) {
-          throw new Error('Failed to fetch jobs');
-        }
-        const data = await response.json();
-        setJobs(data);
-      } catch {
-        toast.error('Something went wrong. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchJobs = async () => {
+    try {
+      const response = await fetch('/api/jobs', { cache: 'no-store' }); // ✅ added
+      if (!response.ok) throw new Error('Failed to fetch jobs');
+      const data = await response.json();
+      setJobs(data);
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchJobs();
-  }, []);
+  fetchJobs();
+}, []);
+
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
