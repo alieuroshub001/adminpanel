@@ -48,23 +48,21 @@ export const getTeamMemberById = async (id: string): Promise<TeamMember | null> 
 
 export const createTeamMember = async (memberData: TeamMemberFormData): Promise<string> => {
   const { teamMembersCollection } = await connectToDatabase();
-  
+
   let imageUrl = memberData.image || '';
-  
+
   if (memberData.imageOption === 'upload' && memberData.imageFile) {
     const arrayBuffer = await memberData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
-    
-   const uploadResult = await cloudinary.uploader.upload(
-  `data:${memberData.imageFile.type};base64,${base64String}`,
-  {
-    folder: 'team-members',
-    transformation: [
-      { quality: 'auto' } // Only optimize, no resizing
-    ]
-  }
-);
+
+    const uploadResult = await cloudinary.uploader.upload(
+      `data:${memberData.imageFile.type};base64,${base64String}`,
+      {
+        folder: 'team-members',
+        transformation: [{ quality: 'auto' }],
+      }
+    );
 
     imageUrl = uploadResult.secure_url;
   } else if (memberData.imageOption === 'url' && memberData.image) {
@@ -84,7 +82,8 @@ export const createTeamMember = async (memberData: TeamMemberFormData): Promise<
     experience: memberData.experience,
     achievements: memberData.achievements || [],
     skills: memberData.skills || [],
-    featured: memberData.featured || false, // ✅ Added
+    featured: memberData.featured || false,
+    department: memberData.department || '', // ✅ added department
     createdAt: now,
     updatedAt: now,
   });
@@ -94,7 +93,7 @@ export const createTeamMember = async (memberData: TeamMemberFormData): Promise<
 
 export const updateTeamMember = async (id: string, memberData: Partial<TeamMemberFormData>): Promise<number> => {
   const { teamMembersCollection } = await connectToDatabase();
-  
+
   const updateData: Partial<TeamMemberDB> = {
     updatedAt: new Date(),
   };
@@ -108,22 +107,21 @@ export const updateTeamMember = async (id: string, memberData: Partial<TeamMembe
   if (memberData.experience !== undefined) updateData.experience = memberData.experience;
   if (memberData.achievements !== undefined) updateData.achievements = memberData.achievements;
   if (memberData.skills !== undefined) updateData.skills = memberData.skills;
-  if (memberData.featured !== undefined) updateData.featured = memberData.featured; // ✅ Added
+  if (memberData.featured !== undefined) updateData.featured = memberData.featured;
+  if (memberData.department !== undefined) updateData.department = memberData.department; // ✅ added department
 
   if (memberData.imageOption === 'upload' && memberData.imageFile) {
     const arrayBuffer = await memberData.imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     const base64String = buffer.toString('base64');
-    
+
     const uploadResult = await cloudinary.uploader.upload(
-  `data:${memberData.imageFile.type};base64,${base64String}`,
-  {
-    folder: 'team-members',
-    transformation: [
-      { quality: 'auto' }
-    ]
-  }
-);
+      `data:${memberData.imageFile.type};base64,${base64String}`,
+      {
+        folder: 'team-members',
+        transformation: [{ quality: 'auto' }],
+      }
+    );
 
     updateData.image = uploadResult.secure_url;
   } else if (memberData.imageOption === 'url' && memberData.image !== undefined) {
@@ -136,13 +134,13 @@ export const updateTeamMember = async (id: string, memberData: Partial<TeamMembe
     { _id: new ObjectId(id) },
     { $set: updateData }
   );
-  
+
   return result.modifiedCount;
 };
 
 export const deleteTeamMember = async (id: string): Promise<number> => {
   const { teamMembersCollection } = await connectToDatabase();
-  
+
   const member = await teamMembersCollection.findOne({ _id: new ObjectId(id) });
   if (member?.image) {
     const publicId = member.image.split('/').pop()?.split('.')[0];

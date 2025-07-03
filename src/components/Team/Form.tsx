@@ -293,6 +293,8 @@ export default function TeamMemberForm({ initialData, isEditing = false }: TeamM
               <option value="HR">HR</option>
               <option value="Operations">Operations</option>
               <option value="Development">Development</option>
+              <option value="VirtualAssistant">Virtual Assistant</option>
+
 
             </select>
             {errors.department && <p className="text-sm text-red-500">{errors.department.message}</p>}
