@@ -33,7 +33,12 @@ export default function JobManagement() {
   const fetchJobs = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/jobs', { cache: 'no-store' });
+      const response = await fetch('/api/jobs', { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch jobs');
       const data = await response.json();
       setJobs(data);
@@ -89,7 +94,7 @@ export default function JobManagement() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-64"
           />
-          <Button onClick={() => router.push('/job/new')}>
+          <Button onClick={() => router.push('/admin/jobs/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New Job
           </Button>
@@ -124,7 +129,7 @@ export default function JobManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/job/edit/${job._id}`)}
+                          onClick={() => router.push(`/admin/jobs/edit/${job._id}`)}
                         >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit

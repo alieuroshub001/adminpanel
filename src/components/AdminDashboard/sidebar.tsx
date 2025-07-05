@@ -55,12 +55,21 @@ export default function Sidebar({ sidebarOpen, setSidebarOpen }: SidebarProps) {
 
           <nav className="flex-1 space-y-2">
             {sidebarItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
+           <Link
+  key={index}
+  href={item.href}
                 className={`flex items-center px-4 py-3 rounded-lg transition-colors ${pathname === item.href ? 'bg-blue-50 text-blue-600' : 'hover:bg-gray-100 text-gray-700'}`}
-                onClick={() => setSidebarOpen(false)}
-              >
+  onClick={(e) => {
+    setSidebarOpen(false);
+
+    // Force reload if current path is same as the target
+    if (pathname === item.href) {
+      e.preventDefault(); // prevent Link from handling navigation
+      window.location.href = item.href; // force full reload
+    }
+  }}
+>
+
                 <item.icon size={20} className="mr-3" />
                 {item.label}
               </Link>

@@ -29,10 +29,15 @@ export default function EventManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
- useEffect(() => {
   const fetchEvents = async () => {
+    setIsLoading(true);
     try {
-      const response = await fetch('/api/event', { cache: 'no-store' });
+      const response = await fetch('/api/event', { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch events');
       const data = await response.json();
       setEvents(data);
@@ -43,10 +48,30 @@ export default function EventManagement() {
     }
   };
 
-  fetchEvents();
-}, []); 
+  useEffect(() => {
+    fetchEvents();
+  }, []); 
 
+  // Add effect to refetch when component becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchEvents();
+    };
 
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        fetchEvents();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this event?')) return;
