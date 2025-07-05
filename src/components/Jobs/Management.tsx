@@ -1,8 +1,7 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -25,14 +24,16 @@ import { Job } from '@/types/job';
 
 export default function JobManagement() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/jobs', { cache: 'no-store' }); // ✅ added
+      setIsLoading(true);
+      const response = await fetch('/api/jobs', { cache: 'no-store' });
       if (!response.ok) throw new Error('Failed to fetch jobs');
       const data = await response.json();
       setJobs(data);
@@ -43,9 +44,9 @@ export default function JobManagement() {
     }
   };
 
-  fetchJobs();
-}, []);
-
+  useEffect(() => {
+    fetchJobs();
+  }, [pathname, searchParams]); // Re-fetch when route changes
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
@@ -60,7 +61,7 @@ export default function JobManagement() {
       }
 
       toast.success('Job deleted successfully');
-      setJobs(jobs.filter(job => job._id !== id));
+      fetchJobs(); // Refresh the list after deletion
     } catch {
       toast.error('Something went wrong. Please try again.');
     }
