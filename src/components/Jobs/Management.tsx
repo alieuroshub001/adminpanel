@@ -92,7 +92,7 @@ export default function JobManagement() {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full md:w-64"
           />
-          <Button onClick={() => router.push('/admin/jobs/new')}>
+          <Button onClick={() => router.push('/job/new')}>
             <Plus className="mr-2 h-4 w-4" />
             New Job
           </Button>
@@ -127,7 +127,7 @@ export default function JobManagement() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem
-                          onClick={() => router.push(`/admin/jobs/edit/${job._id}`)}
+                          onClick={() => router.push(`/job/edit/${job._id}`)}
                         >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit

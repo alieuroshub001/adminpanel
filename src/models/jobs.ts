@@ -15,14 +15,28 @@ async function connectToDatabase() {
   cachedDb = db;
   cachedJobs = db.collection<JobDB>('jobs');
 
-  // Create indexes for better query performance
-  await cachedJobs.createIndex({ title: 'text', description: 'text' });
-  await cachedJobs.createIndex({ department: 1 });
-  await cachedJobs.createIndex({ type: 1 });
-  await cachedJobs.createIndex({ location: 'text' });
+  // ✅ Create compound text index once (title + description)
+  try {
+    await cachedJobs.createIndex(
+      { title: 'text', description: 'text' },
+      { name: 'title_description_text', default_language: 'english' }
+    );
+  } catch (err: unknown) {
+    if (typeof err === 'object' && err !== null && 'codeName' in err && (err as { codeName?: string }).codeName !== 'IndexOptionsConflict') {
+      console.error('Index creation error:', err);
+      throw err;
+    }
+  }
+
+  // ✅ Safe non-text indexes
+  await Promise.all([
+    cachedJobs.createIndex({ department: 1 }),
+    cachedJobs.createIndex({ type: 1 }),
+  ]);
 
   return { db, jobsCollection: cachedJobs };
 }
+
 
 // Helper function to convert DB object to client-safe object
 function toClientJob(job: JobDB): Job {
