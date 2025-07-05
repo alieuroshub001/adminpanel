@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ import { Event } from '@/types/event';
 
 export default function EventManagement() {
   const router = useRouter();
+  const pathname = usePathname();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,7 +33,7 @@ export default function EventManagement() {
   const fetchEvents = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/event', { 
+      const response = await fetch('/api/event', {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache',
@@ -48,20 +49,16 @@ export default function EventManagement() {
     }
   };
 
+  // ✅ Always fetch on initial load + route changes (like after returning from form)
   useEffect(() => {
     fetchEvents();
-  }, []); 
+  }, [pathname]);
 
-  // Add effect to refetch when component becomes visible
+  // ✅ Refetch when browser/tab becomes active
   useEffect(() => {
-    const handleFocus = () => {
-      fetchEvents();
-    };
-
+    const handleFocus = () => fetchEvents();
     const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        fetchEvents();
-      }
+      if (!document.hidden) fetchEvents();
     };
 
     window.addEventListener('focus', handleFocus);
@@ -86,7 +83,7 @@ export default function EventManagement() {
       }
 
       toast.success('Event deleted successfully');
-      setEvents(events.filter(event => event._id !== id));
+      fetchEvents(); // ✅ Refetch after deletion
     } catch {
       toast.error('Something went wrong. Please try again.');
     }
@@ -96,9 +93,7 @@ export default function EventManagement() {
     try {
       const response = await fetch(`/api/event/${id}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isFeatured }),
       });
 
@@ -107,9 +102,7 @@ export default function EventManagement() {
       }
 
       toast.success(`Event ${isFeatured ? 'featured' : 'unfeatured'} successfully`);
-      setEvents(events.map(event => 
-        event._id === id ? { ...event, isFeatured } : event
-      ));
+      fetchEvents(); // ✅ Refetch after toggle
     } catch {
       toast.error('Something went wrong. Please try again.');
     }
@@ -124,11 +117,8 @@ export default function EventManagement() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric', month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit'
     });
   };
 

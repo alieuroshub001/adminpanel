@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -24,8 +24,6 @@ import { Job } from '@/types/job';
 
 export default function JobManagement() {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,9 +47,9 @@ export default function JobManagement() {
     }
   };
 
-  useEffect(() => {
-    fetchJobs();
-  }, [pathname, searchParams]); // Re-fetch when route changes
+ useEffect(() => {
+  fetchJobs();
+}, []); // fetch only on first mount
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
