@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -29,10 +28,15 @@ export default function JobManagement() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
   const fetchJobs = async () => {
     try {
-      const response = await fetch('/api/jobs', { cache: 'no-store' }); // ✅ added
+      setIsLoading(true);
+      const response = await fetch('/api/jobs', { 
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch jobs');
       const data = await response.json();
       setJobs(data);
@@ -43,9 +47,9 @@ export default function JobManagement() {
     }
   };
 
+ useEffect(() => {
   fetchJobs();
-}, []);
-
+}, []); // fetch only on first mount
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this job?')) return;
@@ -60,7 +64,7 @@ export default function JobManagement() {
       }
 
       toast.success('Job deleted successfully');
-      setJobs(jobs.filter(job => job._id !== id));
+      fetchJobs(); // Refresh the list after deletion
     } catch {
       toast.error('Something went wrong. Please try again.');
     }

@@ -16,19 +16,29 @@ async function connectToDatabase() {
   cachedDb = db;
   cachedEvents = db.collection<EventDB>('events');
 
-  // Create indexes for better query performance
-  await cachedEvents.createIndex({ category: 1 });
-  await cachedEvents.createIndex({ date: 1 });
-  await cachedEvents.createIndex({ isFeatured: 1 });
+  // ✅ Safe index creation with error suppression for existing conflicts
+  try {
+    await cachedEvents.createIndex(
+      { title: 'text', location: 'text' },
+      { name: 'text_index', default_language: 'english' }
+    );
+  } catch (err: unknown) {
+    if (typeof err === 'object' && err !== null && 'codeName' in err && (err as { codeName?: string }).codeName !== 'IndexOptionsConflict') {
+      console.error('Failed to create text index for events:', err);
+      throw err;
+    }
+  }
 
-  // Unified text index for title and location
-  await cachedEvents.createIndex(
-    { title: 'text', location: 'text' },
-    { name: 'text_index', default_language: 'english' }
-  );
+  // ✅ These are safe to create without conflict
+  await Promise.all([
+    cachedEvents.createIndex({ category: 1 }),
+    cachedEvents.createIndex({ date: 1 }),
+    cachedEvents.createIndex({ isFeatured: 1 }),
+  ]);
 
   return { db, eventsCollection: cachedEvents };
 }
+
 
 // Helper function to convert DB object to client-safe object
 function toClientEvent(event: EventDB): Event {
