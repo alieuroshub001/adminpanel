@@ -12,6 +12,47 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { ExpertiseFormData } from '@/types/expertise';
 import Image from 'next/image';
+import {
+  Headphones,
+  ClipboardList,
+  Database,
+  LayoutDashboard,
+  HardDrive,
+  Search,
+  BarChart2,
+  Server,
+  Code,
+  Smartphone,
+  Globe,
+  Cloud,
+  Cpu,
+  Users,
+  CheckCircle,
+  ShoppingCart,
+  Paintbrush,
+  Shield
+} from 'lucide-react';
+
+const iconOptions = [
+  { value: 'fa-headphones', label: 'Headphones', icon: <Headphones className="w-4 h-4 mr-2" /> },
+  { value: 'fa-clipboard-list', label: 'Clipboard List', icon: <ClipboardList className="w-4 h-4 mr-2" /> },
+  { value: 'fa-database', label: 'Database', icon: <Database className="w-4 h-4 mr-2" /> },
+  { value: 'fa-dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4 mr-2" /> },
+  { value: 'fa-hard-drive', label: 'Hard Drive', icon: <HardDrive className="w-4 h-4 mr-2" /> },
+  { value: 'fa-search', label: 'Search', icon: <Search className="w-4 h-4 mr-2" /> },
+  { value: 'fa-chart-bar', label: 'Chart Bar', icon: <BarChart2 className="w-4 h-4 mr-2" /> },
+  { value: 'fa-server', label: 'Server', icon: <Server className="w-4 h-4 mr-2" /> },
+  { value: 'fa-code', label: 'Code', icon: <Code className="w-4 h-4 mr-2" /> },
+  { value: 'fa-mobile', label: 'Mobile', icon: <Smartphone className="w-4 h-4 mr-2" /> },
+  { value: 'fa-globe', label: 'Globe', icon: <Globe className="w-4 h-4 mr-2" /> },
+  { value: 'fa-cloud', label: 'Cloud', icon: <Cloud className="w-4 h-4 mr-2" /> },
+  { value: 'fa-cpu', label: 'CPU', icon: <Cpu className="w-4 h-4 mr-2" /> },
+  { value: 'fa-users', label: 'Users', icon: <Users className="w-4 h-4 mr-2" /> },
+  { value: 'fa-check-circle', label: 'Check Circle', icon: <CheckCircle className="w-4 h-4 mr-2" /> },
+  { value: 'fa-shopping-cart', label: 'Shopping Cart', icon: <ShoppingCart className="w-4 h-4 mr-2" /> },
+  { value: 'fa-paint-brush', label: 'Paint Brush', icon: <Paintbrush className="w-4 h-4 mr-2" /> },
+  { value: 'fa-shield-alt', label: 'Shield', icon: <Shield className="w-4 h-4 mr-2" /> },
+];
 
 const expertiseSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -222,15 +263,23 @@ export default function ExpertiseForm({ initialData, isEditing = false }: Expert
             {errors.category && <p className="text-sm text-red-500">{errors.category.message}</p>}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="icon">Icon *</Label>
-            <Input
-              id="icon"
-              {...register('icon')}
-              placeholder="Enter icon name (e.g., fa-chart-line)"
-            />
-            {errors.icon && <p className="text-sm text-red-500">{errors.icon.message}</p>}
-          </div>
+         <div className="space-y-2">
+  <Label htmlFor="icon">Icon *</Label>
+  <select
+    id="icon"
+    {...register('icon')}
+    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+  >
+    <option value="">Select an icon</option>
+    {iconOptions.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ))}
+  </select>
+  {errors.icon && <p className="text-sm text-red-500">{errors.icon.message}</p>}
+</div>
+
         </div>
 
         <div className="space-y-2">
