@@ -1,3 +1,4 @@
+// blogPost.ts
 import { ObjectId } from 'mongodb';
 
 export type ImageSource = 'upload' | 'link';
@@ -20,7 +21,8 @@ export type BlogPostDB = {
   slug: string;
   title: string;
   excerpt: string;
-  content: string;
+  content: string; // HTML content
+  rawContent?: string; // JSON content for future flexibility
   image: string;
   imageSource: ImageSource;
   category: string;
@@ -45,7 +47,8 @@ export type BlogPostFormData = {
   slug: string;
   title: string;
   excerpt: string;
-  content: string;
+  content: string; // HTML content
+  rawContent?: string; // JSON content
   image?: string;
   imageFile?: File;
   imageSource?: ImageSource;

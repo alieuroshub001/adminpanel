@@ -49,54 +49,48 @@ export default function BlogManagement() {
     fetchBlogPosts();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this blog post?')) return;
+ // In Management.tsx, fix the toast messages
+const handleDelete = async (id: string) => {
+  if (!confirm('Are you sure you want to delete this blog post?')) return;
 
-    try {
-      const response = await fetch(`/api/blogs/${id}`, {
-        method: 'DELETE',
-      });
+  try {
+    const response = await fetch(`/api/blogs/${id}`, {
+      method: 'DELETE',
+    });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete blog post');
-      }
+    if (!response.ok) {
+      throw new Error('Failed to delete blog post');
+    }
 
-     toast.success('Blog post created successfully');
-
-
-      setBlogPosts(blogPosts.filter(post => post._id !== id));
-    } catch {
+    toast.success('Blog post deleted successfully');
+    setBlogPosts(blogPosts.filter(post => post._id !== id));
+  } catch {
     toast.error('Something went wrong. Please try again.');
+  }
+};
 
+const toggleFeatured = async (id: string, currentFeatured: boolean) => {
+  try {
+    const response = await fetch(`/api/blogs/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ featured: !currentFeatured }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update featured status');
     }
-  };
 
-  const toggleFeatured = async (id: string, currentFeatured: boolean) => {
-    try {
-      const response = await fetch(`/api/blogs/${id}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ featured: !currentFeatured }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update featured status');
-      }
-
-     toast.success('Blog post created successfully', {
-        description: `Blog post ${currentFeatured ? 'unfeatured' : 'featured'}`,
-      });
-
-      setBlogPosts(blogPosts.map(post => 
-        post._id === id ? { ...post, featured: !currentFeatured } : post
-      ));
-    } catch {
-      toast.error('Something went wrong. Please try again.');
-
-    }
-  };
+    toast.success(`Blog post ${currentFeatured ? 'unfeatured' : 'featured'} successfully`);
+    setBlogPosts(blogPosts.map(post => 
+      post._id === id ? { ...post, featured: !currentFeatured } : post
+    ));
+  } catch {
+    toast.error('Something went wrong. Please try again.');
+  }
+};
 
   const filteredPosts = blogPosts.filter(post =>
     post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||

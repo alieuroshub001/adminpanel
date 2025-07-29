@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import RichTextEditor from '@/components/Blogs/RichTextEditor';
 
 const blogPostSchema = z.object({
   slug: z.string().min(1, 'Slug is required'),
@@ -82,6 +83,7 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
   });
 
   const imageSource = watch('imageSource');
+  const content = watch('content');
 
   useEffect(() => {
     if (initialData) {
@@ -114,6 +116,10 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
     setTagsInput(value);
     const tags = value.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
     setValue('tags', tags);
+  };
+
+  const handleContentChange = (content: string) => {
+    setValue('content', content);
   };
 
   const onSubmit = async (data: FormValues) => {
@@ -159,14 +165,11 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
         throw new Error(response.statusText);
       }
 
-     toast.success('Blog post created successfully');
-
-
+      toast.success(isEditing ? 'Blog post updated successfully' : 'Blog post created successfully');
       router.push('/blog');
       router.refresh();
     } catch {
-     toast.error('Something went wrong. Please try again.');
-
+      toast.error('Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -323,11 +326,10 @@ export default function BlogPostForm({ initialData, isEditing = false }: BlogPos
 
         <div className="space-y-2">
           <Label htmlFor="content">Content *</Label>
-          <Textarea
-            id="content"
-            {...register('content')}
+          <RichTextEditor
+            value={content}
+            onChange={handleContentChange}
             placeholder="Write your blog post content here"
-            rows={10}
           />
           {errors.content && <p className="text-sm text-red-500">{errors.content.message}</p>}
         </div>
