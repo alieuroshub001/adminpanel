@@ -56,12 +56,30 @@ export async function PUT(
     }
 
     const formData = await request.formData();
-    const clientLogoData: Partial<ClientLogoFormData> = {
-      image: formData.get('image') as string || '',
-      imageFile: formData.get('imageFile') as File || undefined,
-      imageSource: formData.get('imageSource') as ImageSource,
-      line: parseInt(formData.get('line') as string) as LogoLine
-    };
+    const clientLogoData: Partial<ClientLogoFormData> = {};
+
+    // Only add fields that are present in the form data
+    if (formData.has('image')) {
+      clientLogoData.image = formData.get('image') as string;
+    }
+    
+    if (formData.has('imageFile')) {
+      const file = formData.get('imageFile') as File;
+      if (file && file.size > 0) {
+        clientLogoData.imageFile = file;
+      }
+    }
+    
+    if (formData.has('imageSource')) {
+      clientLogoData.imageSource = formData.get('imageSource') as ImageSource;
+    }
+    
+    if (formData.has('line')) {
+      const lineValue = formData.get('line') as string;
+      if (lineValue) {
+        clientLogoData.line = parseInt(lineValue) as LogoLine;
+      }
+    }
 
     // Validate line number if provided
     if (clientLogoData.line !== undefined && 
@@ -80,7 +98,7 @@ export async function PUT(
       );
     }
 
-    if (clientLogoData.imageSource !== undefined && clientLogoData.imageSource === ('url' as ImageSource) && !clientLogoData.image) {
+    if (clientLogoData.imageSource === 'link' && !clientLogoData.image) {
       return NextResponse.json(
         { message: 'Image URL is required when choosing URL option' },
         { status: 400 }
